@@ -1,0 +1,16 @@
+<!-- ============================================ -->
+<!-- File: resources/qml.qrc                      -->
+<!-- Description: Qt resource file for QML        -->
+<!-- ============================================ -->
+
+<RCC>
+    <qresource prefix="/">
+        <file>../qml/Main.qml</file>
+        <file>../qml/pages/Dashboard.qml</file>
+        <file>../qml/components/BottomNav.qml</file>
+        <file>../qml/components/CardContainer.qml</file>
+        <file>../qml/components/CircularGauge.qml</file>
+        <file>../qml/components/ProgressBar.qml</file>
+        <file>../qml/components/TopBar.qml</file>
+    </qresource>
+</RCC>
