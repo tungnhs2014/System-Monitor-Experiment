@@ -18,7 +18,7 @@ Rectangle {
    
     // Customizable properties
     property string title: "DETAIL"                   // Page title text
-    property color BackgroundColor: "#0F1419"       // Header background
+    property color backgroundColor: "#0F1419"       // Header background
     property color textColor: "#FFFFFF"             // Text and iconn color
     property int fontSize: 12                         // Title font size
     property bool showBackButton: true                // Show/hide back button
@@ -31,7 +31,7 @@ Rectangle {
 
     // ==================== BACKGROUND ====================
 
-    color: BackgroundColor
+    color: backgroundColor
 
     // Bottom border line (divider)
     Rectangle {

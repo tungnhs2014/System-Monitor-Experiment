@@ -8,6 +8,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import "pages"
+import "components"
 
 Window {
     id: root
@@ -22,7 +23,11 @@ Window {
     flags: Qt.FramelessWindowHint
 
     // Load Dashboard page
-    Dashboard {
+    // Dashboard {
+    //     anchors.fill: parent
+    // }
+
+    MemoryDetail {
         anchors.fill: parent
     }
 }

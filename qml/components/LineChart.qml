@@ -57,7 +57,7 @@ Item {
 
             // Draw horizontal grid linnes
             var step = height / (root.gridLines + 1);
-            for (var i = 1; i <= root.gridLinesl i++) {
+            for (var i = 1; i <= root.gridLinesl; i++) {
                 var y = step * i;
                 ctx.beginPath();
                 ctx.moveTo(0, y);

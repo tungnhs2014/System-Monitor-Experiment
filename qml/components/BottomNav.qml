@@ -14,7 +14,7 @@ Rectangle {
 
     Row {
         anchors.centerIn: parent
-        spacing: 15 
+        spacing: 40
 
         NavButton {
             icon: "🏠"
