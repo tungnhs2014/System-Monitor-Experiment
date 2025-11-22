@@ -31,7 +31,11 @@ Window {
     //     anchors.fill: parent
     // }
 
-    CpuDetail {
-        anchors.fill: parent
+    // CpuDetail {
+    //     anchors.fill: parent
+    // }
+
+    StorageDetail {
+       anchors.fill: parent
     }
 }

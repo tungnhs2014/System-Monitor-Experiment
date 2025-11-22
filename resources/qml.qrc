@@ -7,6 +7,7 @@
         <file>../qml/pages/Dashboard.qml</file>
         <file>../qml/pages/MemoryDetail.qml</file>
         <file>../qml/pages/CpuDetail.qml</file>
+        <file>../qml/pages/StorageDetail.qml</file>
 
         <!-- Componets-->
         <file>../qml/components/BottomNav.qml</file>
@@ -17,5 +18,6 @@
         <file>../qml/components/DetailHeader.qml</file>
         <file>../qml/components/LineChart.qml</file>
         <file>../qml/components/CoreUsageBar.qml</file>
+        <file>../qml/components/PartitionBar.qml</file>
     </qresource>
 </RCC>

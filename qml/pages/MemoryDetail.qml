@@ -248,6 +248,7 @@ Rectangle {
     }
 
     // ==================== BOTTOM NAVIGATION ====================
+    
     BottomNav {
         id: bottomNav
         anchors.bottom: parent.bottom
