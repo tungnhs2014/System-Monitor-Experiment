@@ -35,7 +35,11 @@ Window {
     //     anchors.fill: parent
     // }
 
-    StorageDetail {
-       anchors.fill: parent
+    // StorageDetail {
+    //    anchors.fill: parent
+    // }
+
+    NetworkDetail {
+        anchors.fill: parent
     }
 }

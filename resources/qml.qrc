@@ -8,6 +8,7 @@
         <file>../qml/pages/MemoryDetail.qml</file>
         <file>../qml/pages/CpuDetail.qml</file>
         <file>../qml/pages/StorageDetail.qml</file>
+        <file>../qml/pages/NetworkDetail.qml</file>
 
         <!-- Componets-->
         <file>../qml/components/BottomNav.qml</file>
