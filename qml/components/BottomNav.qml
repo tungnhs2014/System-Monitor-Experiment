@@ -8,7 +8,7 @@ Rectangle {
     id: root
     width: 320
     height: 45
-    color: "#0A0E14"
+    color: "#0F1419"
 
     property int currentIndex: 0
 

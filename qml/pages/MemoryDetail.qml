@@ -87,7 +87,7 @@ Rectangle {
                     var radius = (width / 2) - 5; // 5px stroke width
 
                     // Gray background circle
-                    ctx.strkeStyle = Qt.rgba(1, 1, 1, 0.1);
+                    ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.1);
                     ctx.lineWidth = 5;
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius, 0 , 2 * Math.PI);

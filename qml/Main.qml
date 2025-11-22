@@ -22,12 +22,16 @@ Window {
     // Frameless window for embedded
     flags: Qt.FramelessWindowHint
 
-    // Load Dashboard page
+    // Load page
     // Dashboard {
     //     anchors.fill: parent
     // }
 
-    MemoryDetail {
+    // MemoryDetail {
+    //     anchors.fill: parent
+    // }
+
+    CpuDetail {
         anchors.fill: parent
     }
 }

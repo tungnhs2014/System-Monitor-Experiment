@@ -1,8 +1,14 @@
 <RCC>
     <qresource prefix="/">
+        <!-- Main -->
         <file>../qml/Main.qml</file>
+
+        <!-- Pages -->
         <file>../qml/pages/Dashboard.qml</file>
         <file>../qml/pages/MemoryDetail.qml</file>
+        <file>../qml/pages/CpuDetail.qml</file>
+
+        <!-- Componets-->
         <file>../qml/components/BottomNav.qml</file>
         <file>../qml/components/CardContainer.qml</file>
         <file>../qml/components/CircularGauge.qml</file>
@@ -10,5 +16,6 @@
         <file>../qml/components/TopBar.qml</file>
         <file>../qml/components/DetailHeader.qml</file>
         <file>../qml/components/LineChart.qml</file>
+        <file>../qml/components/CoreUsageBar.qml</file>
     </qresource>
 </RCC>

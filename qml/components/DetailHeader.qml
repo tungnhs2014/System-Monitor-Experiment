@@ -141,7 +141,7 @@ Rectangle {
             // RGB565 optimizations
             renderType: Text.NativeRendering
             antialiasing: false
-            font.hintingPreference: Font.PreferFullHintin
+            font.hintingPreference: Font.PreferFullHinting
         }
 
         // Clicked area
