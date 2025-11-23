@@ -1,0 +1,526 @@
+/*
+ * ============================================
+ * File: qml/pages/Settings.qml
+ * Description: Settings page with 4 tabs
+ * ============================================
+ */
+
+import QtQuick 2.15
+import "../components"
+
+Rectangle {
+    id: root
+
+    // ==================== PROPERTIES ====================
+
+    width: 320
+    height: 240
+    color: "#0F1419"
+
+    // ==================== MOCK DATA ====================
+    
+    // System tab
+    property string mockHostname: "raspberrypi"
+    property string mockOsVersion: "Raspberry Pi OS"
+    property string mockKernel: "Linux 5.10.103"
+    property string mockUptime: "3d 4h 15m 30s"
+    property string mockSystemTime: "03:00:48 [NTP]"
+
+    // Monitor tab
+    property int mockUpdateInterval: 2
+    property bool mockDarkMode: true
+    property bool mockSoundAlert: false
+
+    // Warning tab
+    property int mockCpuWarn: 70
+    property int mockCpuCrit: 90
+    property int mockRamWarn: 75
+
+    // Logs tab 
+    property var mockLogs: [
+        {time: "03:00:45", level: "INFO", message: "System monitor started"},
+        {time: "03:00:46", level: "INFO", message: "Network connected: eth0"},
+        {time: "03:00:48", level: "WARN", message: "High CPU temperature: 85°C"},
+        {time: "03:00:50", level: "ERROR", message: "Storage 95% full - cleanup needed"},
+        {time: "03:00:52", level: "INFO", message: "Settings loaded successfully"}
+    ]
+
+    // ==================== HEADER ====================
+    DetailHeader {
+        id: header
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
+        }
+        title: "SETTINGS"
+
+        onBackClicked: {
+            console.log("Back to previous page")
+            // TODO: StackView.view.pop()
+        }
+
+        onSettingsClicked: {
+            console.log("Already in Settings")
+        }
+    }
+
+    // ==================== TAB BAR ====================
+
+    TabBar {
+        id: tabBar
+        anchors {
+            top: header.bottom
+            left: parent.left
+            right: parent.right
+        }
+        tabs: ["System", "Monitor", "Warning", "Logs"]
+        currentIndex: 0
+
+        onTabClicked: function(index) {
+            console.log("Tab switched to:", tabs[index])
+        }
+    }
+
+    // ==================== CONTENT AREA ====================
+
+    Item {
+        id: contentArea
+        anchors {
+            top: tabBar.bottom
+            left: parent.left
+            right: parent.right
+            // bottom.saveButton.top
+            margins: 8
+        }
+
+        // ==================== TAB 1: SYSTEM INFO ====================
+        
+        Column {
+            anchors.fill: parent
+            spacing: 8
+            visible: tabBar.currentIndex === 0
+
+            // System info card
+            Rectangle {
+                width: parent.width
+                height: 100
+                color: "#1E2539"
+                radius: 8
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.1)
+
+                Column {
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 10
+                    }
+                    spacing: 6
+                    // Info rows
+                    Repeater {
+                        model: [
+                            {label: "Hostname:", value: root.mockHostname},
+                            {label: "OS Version:", value: root.mockOsVersion},
+                            {label: "Kernel:", value: root.mockKernel},
+                            {label: "Uptime:", value: root.mockUptime},
+                            {label: "System Time:", value: root.mockSystemTime}
+                        ]
+
+                        Row {
+                            spacing: 8
+
+                            Text {
+                                text: modelData.label
+                                font.family: "DejaVu Sans"
+                                font.pixelSize: 8
+                                font.bold: true
+                                color: "#B0B8C8"
+                                width: 80
+                                renderType: Text.NativeRendering
+                                antialiasing: false
+                                font.hintingPreference: Font.PreferFullHinting
+                            }
+                            
+                            Text {
+                                text: modelData.value
+                                font.family: "DejaVu Sans"
+                                font.pixelSize: 8
+                                font.bold: true
+                                color: "#FFFFFF"
+                                renderType: Text.NativeRendering
+                                antialiasing: false
+                                font.hintingPreference: Font.PreferFullHinting
+                            }
+                        }
+                    }
+                }
+            }
+
+            // System control buttons
+            Row{
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 10
+
+                Button {
+                    text: "Reboot"
+                    buttonColor: "#FF9800"  // Orange
+                    width: 90
+                    height: 26
+                    onClicked: {
+                        console.log("Reboot requested")
+                        // TODO: Show confirmation dialog
+                        // systemControl.reboot()
+                    }
+                }
+
+                Button {
+                    text: "Shutdown"
+                    buttonColor: "#F44336"  // Red
+                    width: 90
+                    height: 26
+                    onClicked: {
+                        console.log("Shutdown requested")
+                        // TODO: Show confirmation dialog
+                        // systemControl.Shutdown()
+                    }
+                }
+            }
+        }
+
+        // ==================== TAB 2: MONITOR SETTINGS ====================
+
+        Column {
+            anchors.fill: parent
+            spacing: 12
+            visible: tabBar.currentIndex === 1
+            
+            // Update interval
+            Row {
+                width: parent.width
+                spacing: 10
+
+                Text {
+                    text: "Update Interval:"
+                    font.family: "DejaVu Sans"
+                    font.pixelSize: 9
+                    color: "#FFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                    renderType: Text.NativeRendering
+                    antialiasing: false
+                    font.hintingPreference: Font.PreferFullHinting
+                }
+
+                // Dropdown (simplified as button for now)
+                Rectangle {
+                    width: 60
+                    height: 24
+                    radius: 4
+                    color: "#1E2539"
+                    border.width: 1
+                    border.color: Qt.rgba(1, 1, 1, 0.2)
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+
+                        Text {
+                            text: root.mockUpdateInterval + "s"
+                            font.pixelSize: 9
+                            color: "#FFFFFF"
+                            renderType: Text.NativeRendering
+                            antialiasing: false
+                            font.hintingPreference: Font.PreferFullHinting
+                        }
+
+                        Text {
+                            text: "▼"
+                            font.family: "DejaVu Sans"
+                            font.pixelSize: 7
+                            color: "#B0B8C8"
+                            renderType: Text.NativeRendering
+                            antialiasing: false
+                            font.hintingPreference: Font.PreferFullHinting
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            console.log("Update interval dropdown clicked")
+                            // TODO: Show dropdown menu
+                        }
+                    }
+                }
+            }
+
+            // Dark mode toggle
+            Row {
+                width: parent.width
+                spacing: 10
+
+                Text {
+                    text: "Dark Mode:"
+                    font.family: "DejaVu Sans"
+                    font.pixelSize: 9
+                    color: "#FFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 100
+                    renderType: Text.NativeRendering
+                    antialiasing: false
+                    font.hintingPreference: Font.PreferFullHinting
+                }
+
+                ToggleSwitch {
+                    checked: root.mockDarkMode
+                    onToggled: function(state) {
+                        root.mockDarkMode = state
+                        console.log("Dark mode:", state ? "ON" : "OFF")
+                    }
+                }
+            }
+        }
+        
+        // ==================== TAB 3: WARNING THRESHOLDS ====================
+        
+        Column {
+            anchors.fill: parent
+            spacing: 12
+            visible: tabBar.currentIndex === 2
+
+            // CPU warning
+            Row {
+                width: parent.width
+                spacing: 10
+
+                Text {
+                    text: "CPU Warning:"
+                    font.family: "DejaVu Sans"
+                    font.pixelSize: 9
+                    color: "#FFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 100
+                    renderType: Text.NativeRendering
+                    antialiasing: false
+                    font.hintingPreference: Font.PreferFullHinting
+                }
+
+                InputField {
+                    id: cpuWarnInput
+                    value: root.mockCpuWarn
+                    minValue: 50
+                    maxValue: 95
+                    suffix: "%"
+                    onValueChanged: {
+                        root.mockCpuWarn = cpuWarnInput.value
+                        console.log("CPU warning threshold:", cpuWarnInput.value)
+                    }
+                }
+            }
+
+            // CPU critical
+            Row {
+                width: parent.width
+                spacing: 10
+                
+                Text {
+                    text: "CPU Critical:"
+                    font.family: "DejaVu Sans"
+                    font.pixelSize: 9
+                    color: "#FFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 100
+                    renderType: Text.NativeRendering
+                    antialiasing: false
+                    font.hintingPreference: Font.PreferFullHinting
+                }
+                
+                InputField {
+                    id: cpuCritInput
+                    value: root.mockCpuCrit
+                    minValue: 50
+                    maxValue: 95
+                    suffix: "%"
+                    onValueChanged: {
+                        root.mockCpuCrit = cpuCritInput.value
+                        console.log("CPU critical threshold:", cpuCritInput.value)
+                    }
+                }
+            }
+
+            // RAM warning
+            Row {
+                width: parent.width
+                spacing: 10
+                
+                Text {
+                    text: "RAM Warning:"
+                    font.family: "DejaVu Sans"
+                    font.pixelSize: 9
+                    color: "#FFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 100
+                    renderType: Text.NativeRendering
+                    antialiasing: false
+                    font.hintingPreference: Font.PreferFullHinting
+                }
+                
+                InputField {
+                    id: ramWarnInput
+                    value: root.mockRamWarn
+                    minValue: 50
+                    maxValue: 95
+                    suffix: "%"
+                    onValueChanged: {
+                        root.mockRamWarn = ramWarnInput.value
+                        console.log("RAM warning threshold:", ramWarnInput.value)
+                    }
+                }
+            }
+        }
+
+        // ==================== TAB 4: SYSTEM LOGS ====================
+
+        Rectangle {
+            anchors.fill: parent
+            visible: tabBar.currentIndex === 3
+            color: "#1E2539"
+            radius: 8
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+
+            ListView {
+                id: logListView
+                anchors {
+                    fill: parent
+                    margins: 6
+                }
+                clip: true
+                spacing: 4
+                model: root.mockLogs
+
+                delegate: Row {
+                    spacing: 6
+
+                    // Time
+                    Text {
+                        text: modelData.time
+                        font.family: "DejaVu Sans"
+                        font.pixelSize: 7
+                        color: "#B0B8C8"
+                        width: 50
+                        renderType: Text.NativeRendering
+                        antialiasing: false
+                        font.hintingPreference: Font.PreferFullHinting
+                    }
+
+                    // Level
+                    Rectangle {
+                        width: 36
+                        height: 12
+                        radius: 3
+                        color: {
+                            if (modelData.level == "ERROR") return "#F44336"
+                            if (modelData.level === "WARN") return "#FF9800"
+                            return "#2196F3" // INFO
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.level
+                            font.family: "DejaVu Sans"
+                            font.pixelSize: 6
+                            font.bold: true
+                            color: "#FFFFFF"
+                            renderType: Text.NativeRendering
+                            antialiasing: false
+                            font.hintingPreference: Font.PreferFullHinting
+                        }
+                    }
+
+                    // Message
+                    Text {
+                        text: modelData.message
+                        font.family: "DejaVu Sans"
+                        font.pixelSize: 7
+                        color: "#FFFFFF"
+                        width: 200
+                        wrapMode: Text.WordWrap
+                        renderType: Text.NativeRendering
+                        antialiasing: false
+                        font.hintingPreference: Font.PreferFullHinting
+                    }
+                }
+
+                // Scrollbar indicator
+                Rectangle {
+                    anchors {
+                        right: parent.right
+                        top: parent.top
+                        bottom: parent.bottom
+                    }
+                    width: 3
+                    color: Qt.rgba(1, 1, 1, 0.1)
+                    radius: 1.5
+
+                    Rectangle {
+                        width: parent.width
+                        height: {
+                            var ratio = logListView.height / logListView.contentHeight
+                            return Math.max(parent.height * ratio, 20)
+                        }
+                        y: {
+                            var ratio = logListView.contentY / (logListView.contentHeight - logListView.height)
+                            return ratio * (parent.height - height)
+                        }
+                        color: "#2196F3"
+                        radius: 1.5
+                        visible: logListView.contentHeight > logListView.height
+                    }
+                }
+            }
+        }
+    }
+
+    // ==================== SAVE BUTTON ====================
+
+    Button {
+        id: saveButton
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: bottomNav.top
+            bottomMargin: 8
+        }
+        width: 304
+        height: 30
+        text: "Save Changes"
+        buttonColor: "#4CAF50"  // Green
+
+        onClicked: {
+            console.log("Saving settings...")
+            console.log("Update interval:", root.mockUpdateInterval)
+            console.log("Dark mode:", root.mockDarkMode)
+            console.log("Sound alert:", root.mockSoundAlert)
+            console.log("CPU warn:", root.mockCpuWarn)
+            console.log("CPU crit:", root.mockCpuCrit)
+            console.log("RAM warn:", root.mockRamWarn)
+            
+            // TODO: Save to backend
+            // settings.save()
+            
+            // Show success feedback (could add toast/snackbar)
+            console.log("Settings saved successfully!")
+        }
+    }
+
+    // ==================== BOTTOM NAVIGATION ====================
+
+    BottomNav {
+        id: bottomNav
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        currentIndex: 0
+    }
+}

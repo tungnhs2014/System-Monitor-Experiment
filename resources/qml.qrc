@@ -9,6 +9,7 @@
         <file>../qml/pages/CpuDetail.qml</file>
         <file>../qml/pages/StorageDetail.qml</file>
         <file>../qml/pages/NetworkDetail.qml</file>
+        <file>../qml/pages/Settings.qml</file>
 
         <!-- Componets-->
         <file>../qml/components/BottomNav.qml</file>
@@ -20,5 +21,9 @@
         <file>../qml/components/LineChart.qml</file>
         <file>../qml/components/CoreUsageBar.qml</file>
         <file>../qml/components/PartitionBar.qml</file>
+        <file>../qml/components/TabBar.qml</file>
+        <file>../qml/components/Button.qml</file>
+        <file>../qml/components/ToggleSwitch.qml</file>
+        <file>../qml/components/InputField.qml</file>
     </qresource>
 </RCC>
