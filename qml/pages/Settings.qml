@@ -17,6 +17,10 @@ Rectangle {
     height: 240
     color: "#0F1419"
 
+    // ==================== SIGNALS FOR NAVIGATION ====================
+    signal backRequested()
+    signal settingsRequested()
+
     // ==================== MOCK DATA ====================
     
     // System tab
@@ -56,12 +60,11 @@ Rectangle {
         title: "SETTINGS"
 
         onBackClicked: {
-            console.log("Back to previous page")
-            // TODO: StackView.view.pop()
+            root.backRequested()
         }
 
         onSettingsClicked: {
-            console.log("Already in Settings")
+            // Already in Settings, do nothing
         }
     }
 

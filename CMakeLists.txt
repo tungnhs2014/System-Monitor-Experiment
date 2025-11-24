@@ -4,7 +4,7 @@
 # ============================================
 
 cmake_minimum_required(VERSION 3.16)
-project(ili9341-system VERSION 1.0.0 LANGUAGES CXX)
+project(ili9341-system VERSION 3.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,16 +22,22 @@ find_package(Qt6 REQUIRED COMPONENTS
     Quick
 ) 
 
-# Detect target platform
-if (CMAKE_CROSSCOMPILING)
-    set(TARGET_PLATFORM "Pi")
-    message(STATUS "Cross-compiling for Raspberry Pi")
+# ==================== PLATFORM DETECTION ====================
+
+message(STATUS "Detecting platform.CMAKE_SYSTEM_PROCESSOR..")
+message(STATUS "System: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|armv71).*")
+    set(PLATFORM_RASPBERRY_PI TRUE)
+    message(STATUS "Detected: Raspberry Pi (ARM processor)")
 else()
-    set(TARGET_PLATFORM "Desktop")
-    message(STATUS "Building for Desktop")
+    set(PLATFORM_RASPBERRY_PI FALSE)
+    message(STATUS "Detected: Desktop/Ubuntu (x86/64 processor)")
 endif()
 
-# Source files
+# ==================== SOURCE FILES ====================
+
 set(SOURCES
     main.cpp
     src/SystemInfo.cpp
@@ -59,12 +65,15 @@ set(RESOURCES
     resources/qml.qrc
 )
 
-# Create executable
+# ==================== CREATE EXECUTABLE ====================
+
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
     ${RESOURCES}
 )
+
+# ==================== LINK LIBRARIES ====================
 
 # Link Qt libraries
 target_link_libraries(${PROJECT_NAME}
@@ -75,7 +84,8 @@ target_link_libraries(${PROJECT_NAME}
 
 )
 
-# Include directories
+# ==================== INCLUDE DIRECTORIES ===================
+
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -83,28 +93,40 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
 )
 
-# Compiler definitions
-if(TARGET_PLATFORM STREQUAL "Pi")
+# ==================== COMPILER DEFINITIONS ====================
+
+if(PLATFORM_RASPBERRY_PI)
     target_compile_definitions(${PROJECT_NAME}
         PRIVATE
-            TARGET_PI
+            PLATFORM_RASPBERRY_PI=1
     )
+    message(STATUS "Compile flag: PLATFORM_RASPBERRY_PI=1")
 else()
     target_compile_definitions(${PROJECT_NAME}
         PRIVATE
-            TARGET_DESKTOP
+            PLATFORM_DESKTOP=1
     )
+    message(STATUS "Compile flag: PLATFORM_DESKTOP=1")
 endif()
 
-# Install target
+# ==================== INSTALL TARGET ====================
+
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
 )
 
-# Print build info
+# ==================== BUILD SUMMARY ====================
 message(STATUS "==========================================")
-message(STATUS "Project: ${PROJECT_NAME}")
-message(STATUS "Version: ${PROJECT_VERSION}")
-message(STATUS "Target Platfrom: ${TARGET_PLATFORM}")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Project: ${PROJECT_NAME} v${PROJECT_VERSION}")
+message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "Target: ${PLATFORM_RASPBERRY_PI}")
+
+if(PLATFORM_RASPBERRY_PI)
+    message(STATUS "Build for: Raspberry Pi")
+else()
+    message(STATUS "Build for: Desktop/Ubuntu")
+endif()
+
 message(STATUS "Qt Version: ${Qt6_VERSION}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")

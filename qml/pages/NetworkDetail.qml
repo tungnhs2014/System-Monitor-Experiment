@@ -18,6 +18,11 @@ Rectangle {
     height: 240
     color: "#0F1419"
 
+    // ==================== SIGNALS FOR NAVIGATION ====================
+    signal backRequested()
+    signal settingsRequested()
+    signal navigationRequested(int index)
+
     // ==================== MOCK DATA ====================
 
     property string mockInterface: "eth0"
@@ -56,13 +61,11 @@ Rectangle {
         title: "NETWORK"
 
         onBackClicked: {
-            console.log("Back to Dashboard")
-            // TODO: StackView.view.pop()
+            root.backRequested()
         }
-        
+
         onSettingsClicked: {
-            console.log("Open Settings")
-            // TODO: stackView.push("Settings.qml")
+            root.settingsRequested()
         }
     }
 
@@ -322,6 +325,11 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        currentIndex: 0
+        currentIndex: 4  // Network tab (index 4)
+
+        // Forward navigation signal to Main.qml
+        onNavigationRequested: function(index) {
+            root.navigationRequested(index)
+        }
     }
 }

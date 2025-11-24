@@ -14,7 +14,7 @@ QString FileReader::readFile(const QString &path)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Failed to open file: " << path;
+        // qWarning() << "Failed to open file: " << path;
         return QString();
     }
 

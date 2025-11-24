@@ -15,6 +15,10 @@ Rectangle {
     height: 240
     color: "#0A0E14"  // Dark blue-gray (RGB565-safe)
 
+    // ==================== SIGNALS FOR NAVIGATION ====================
+    signal navigationRequested(int index)
+    signal settingsRequested()
+
     // Top Bar
     TopBar {
         id: topBar
@@ -596,5 +600,10 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         currentIndex: 0
+
+        // Forward navigation signal to Main.qml
+        onNavigationRequested: function(index) {
+            root.navigationRequested(index)
+        }
     }
 }

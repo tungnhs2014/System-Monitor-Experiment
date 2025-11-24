@@ -109,7 +109,7 @@ Window {
 
     // Listen for navigation events from current page
     Connections {
-        target: StackView.currentItem
+        target: stackView.currentItem
 
         // Handle back button clicks from DetailHeader
         function onBackRequested() {

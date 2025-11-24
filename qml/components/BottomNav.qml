@@ -11,6 +11,12 @@ Rectangle {
     color: "#0F1419"
 
     property int currentIndex: 0
+    signal navigationRequested(int index)
+
+    // Emit signal when index changes
+    onCurrentIndexChanged: {
+        navigationRequested(currentIndex)
+    }
 
     Row {
         anchors.centerIn: parent
