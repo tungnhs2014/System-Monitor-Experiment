@@ -90,11 +90,11 @@ Rectangle {
 
                 // Temperature label
                 Text {
-                    text: "TEMP" + root.mockCpuTemp + "°C"
+                    text: "TEMP" + systemInfo.cpuTemp + "°C"
                     font.family: "DejaVu Sans"
                     font.pixelSize: 10
                     font.bold: true
-                    color: root.mockCpuTemp > 80 ? "#FF9800" : "#4CAF50"
+                    color: systemInfo.cpuTemp > 80 ? "#FF9800" : "#4CAF50"
                     renderType: Text.NativeRendering
                     antialiasing: false
                     font.hintingPreference: Font.PreferFullHinting
@@ -104,7 +104,7 @@ Rectangle {
                 LineChart {
                     width: 288
                     height: 45
-                    dataPoints: root.mockTempHistory
+                    dataPoints: systemInfo.mockTempHistory
                     lineColor: "#4CAF50" // Green for temp
                     minValue: 60
                     maxValue: 80
@@ -113,7 +113,7 @@ Rectangle {
 
                 // Load and clock info
                 Text {
-                    text: "Load " + root.mockCoreUsages + "% | Clock: " + root.mockCpuClock
+                    text: "Load " + systemInfo.cpuUsage + "% | Clock: " + systemInfo.cpuClock
                     font.family: "DejaVu Sans"
                     font.pixelSize: 10;
                     color: "#B0B8C8"
@@ -150,7 +150,7 @@ Rectangle {
 
             // Core bars (4 cores)
             Repeater {
-                model: root.mockCoreUsages
+                model: systemInfo.mockCoreUsages
                 
                 CoreUsageBar {
                     width: 304

@@ -12,6 +12,7 @@
 MemoryMonitor::MemoryMonitor(QObject *parent)
     : QObject(parent)
 {
+    qDebug() << "MemoryMonitor initialized";
 }
 
 int MemoryMonitor::parseUsage()
@@ -60,6 +61,22 @@ int MemoryMonitor::parseTotal()
     unsigned long long total = memInfo.value("MemTotal", 0);
     
     return static_cast<int>(total / 1024); // Convert kB to MB
+}
+
+QString MemoryMonitor::parseCache()
+{
+    QMap<QString, unsigned long long> memInfo = parseMemInfo();
+
+    // Get cached memory in kB
+    unsigned long long cached = memInfo.value("Cached", 0);
+
+    if (cached == 0) {
+        qWarning() << "Failed to read Cached memory";
+        return "0M";
+    }
+    
+    // Convert kB to bytes, then to MB string
+    return bytesToMB(cached * 1024);
 }
 
 QMap<QString, unsigned long long> MemoryMonitor::parseMemInfo()

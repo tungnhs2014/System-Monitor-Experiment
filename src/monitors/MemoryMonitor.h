@@ -1,7 +1,7 @@
 /**
  * ============================================
  * File: src/monitors/MemoryMonitor.h
- * Description: RAM monitoring - usage, used/free, swap
+ * Description: RAM monitoring - usage, used/free, swap, cache
  * ============================================
  */
 
@@ -10,6 +10,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QMap>
 
 class MemoryMonitor : public QObject 
 {
@@ -29,6 +30,9 @@ public:
 
     // Parse total RAM in MB
     int parseTotal();
+
+    // Parse RAM cache size in MB
+    QString parseCache();
 
 private:
     // Parse /proc/meminfo

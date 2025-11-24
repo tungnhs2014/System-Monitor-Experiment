@@ -88,6 +88,14 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
                         anchors.verticalCenter: parent.verticalCenter
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.navigationRequested(1)  // Navigate to CPU (index 1)
+                            }
+                        }
                     }
 
                     Column {
@@ -193,6 +201,14 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
                         anchors.verticalCenter: parent.verticalCenter
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.navigationRequested(2)  // Navigate to Memory (index 2)
+                            }
+                        }
                     }
 
                     Column {
@@ -354,6 +370,14 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
                         anchors.verticalCenter: parent.verticalCenter
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.navigationRequested(3)  // Navigate to RAM (index 3)
+                            }
+                        }
                     }
 
                     Column {
@@ -462,6 +486,14 @@ Rectangle {
                             color: "#FFFFFF"
                             renderType: Text.NativeRendering
                             antialiasing: false
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.navigationRequested(4)  // Navigate to Network (index 3)
+                            }
+                        }
                         }
 
                         ProgressBar {
