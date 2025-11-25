@@ -538,7 +538,7 @@ Rectangle {
                             antialiasing: false
                         }
                         Text {
-                            text: "↓" + systemInfo.netDown
+                            text: "↓" + systemInfo.net
                             font.pixelSize: 7
                             font.bold: true
                             font.family: "DejaVu Sans"

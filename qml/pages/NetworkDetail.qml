@@ -50,6 +50,26 @@ Rectangle {
     property string mockPacketRate: "0 pps"
     property int mockActiveConnections: 7
 
+    // ==================== DEBUG ====================
+    Component.onCompleted: {
+        console.log("=== NetworkDetail DEBUG ===")
+        console.log("Interface:", systemInfo.networkInterface)
+        console.log("IP:", systemInfo.ipAddress)
+        console.log("MAC:", systemInfo.macAddress)
+        console.log("Upload history length:", systemInfo.netUpHistory.length)
+        console.log("Download history length:", systemInfo.netDownHistory.length)
+    }
+
+    Connections {
+        target: systemInfo
+        function onNetUpHistoryChanged() {
+            console.log("Upload history updated, length:", systemInfo.netUpHistory.length)
+        }
+        function onNetDownHistoryChanged() {
+            console.log("Download history updated, length:", systemInfo.netDownHistory.length)
+        }
+    }
+
     // ==================== HEADER ==================== 
     DetailHeader {
         id: header
@@ -109,7 +129,7 @@ Rectangle {
                     spacing: 2
 
                     Text {
-                        text: "Interface: " + root.mockInterface
+                        text: "Interface: " + systemInfo.networkInterface
                         font.family: "DejaVu Sans"
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
@@ -118,7 +138,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: "MAC: " + root.mockMacAddress
+                        text: "MAC: " + systemInfo.macAddress
                         font.family: "DejaVu Sans"
                         font.pixelSize: 7
                         color: "#B0B8C8"
@@ -131,7 +151,7 @@ Rectangle {
                 // IP address
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "IP: " + root.mockIpAddress
+                    text: "IP: " + systemInfo.ipAddress
                     font.family: "Dejavu Sans"
                     font.pixelSize: 9
                     color: "#FFFFFF"
@@ -183,7 +203,7 @@ Rectangle {
                     // Download line (behind, orange)
                     LineChart {
                         anchors.fill: parent
-                        dataPoints: root.mockDownHistory
+                        dataPoints: systemInfo.netDownHistory
                         lineColor: "#FF9800"  // Orange for download
                         smoothLine: true
                         lineWidth: 2
@@ -192,7 +212,7 @@ Rectangle {
                     // Upload line (behind, cyan)
                     LineChart {
                         anchors.fill: parent
-                        dataPoints: root.mockUpHistory
+                        dataPoints: systemInfo.netUpHistory
                         lineColor: "#00BCD4"  // Orange for download
                         smoothLine: true
                         lineWidth: 2
@@ -271,7 +291,7 @@ Rectangle {
                 spacing: 10
 
                 Text {
-                    text: "↑ Up: " + root.mockUpSpeed
+                    text: "↑ Up: " + systemInfo.netUpSpeed
                     font.family: "DejaVu Sans"
                     font.pixelSize: 10
                     color: "#00BCD4"
@@ -281,7 +301,7 @@ Rectangle {
                 }
 
                 Text {
-                    text: "↓ Down: " + root.mockDownSpeed
+                    text: "↓ Down: " + systemInfo.netDownSpeed
                     font.family: "DejaVu Sans"
                     font.pixelSize: 10
                     color: "#FF9800"
@@ -296,7 +316,7 @@ Rectangle {
                 spacing: 12
 
                 Text {
-                    text: "Packets: " + root.mockPacketRate
+                    text: "Packets: " + systemInfo.packetRate
                     font.family: "DejaVu Sans"
                     font.pixelSize: 8
                     color: "#B0B8C8"
@@ -306,7 +326,7 @@ Rectangle {
                 }
 
                 Text {
-                    text: "Connections: " + root.mockActiveConnections
+                    text: "Connections: " + systemInfo.activeConnections
                     font.family: "DejaVu Sans"
                     font.pixelSize: 8
                     color: "#B0B8C8"

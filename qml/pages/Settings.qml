@@ -124,11 +124,11 @@ Rectangle {
                     // Info rows
                     Repeater {
                         model: [
-                            {label: "Hostname:", value: root.mockHostname},
-                            {label: "OS Version:", value: root.mockOsVersion},
-                            {label: "Kernel:", value: root.mockKernel},
-                            {label: "Uptime:", value: root.mockUptime},
-                            {label: "System Time:", value: root.mockSystemTime}
+                            {label: "Hostname:", value: systemInfo.hostname},
+                            {label: "OS Version:", value: systemInfo.osVersion},
+                            {label: "Kernel:", value: systemInfo.kernelVersion},
+                            {label: "Uptime:", value: systemInfo.uptime},
+                            {label: "System Time:", value: systemInfo.systemTime}
                         ]
 
                         Row {
@@ -174,7 +174,7 @@ Rectangle {
                     onClicked: {
                         console.log("Reboot requested")
                         // TODO: Show confirmation dialog
-                        // systemControl.reboot()
+                        systemInfo.reboot()
                     }
                 }
 
@@ -186,7 +186,7 @@ Rectangle {
                     onClicked: {
                         console.log("Shutdown requested")
                         // TODO: Show confirmation dialog
-                        // systemControl.Shutdown()
+                        systemInfo.shutdown()
                     }
                 }
             }
@@ -229,7 +229,7 @@ Rectangle {
                         spacing: 4
 
                         Text {
-                            text: root.mockUpdateInterval + "s"
+                            text: systemInfo.updateInterval + "s"
                             font.pixelSize: 9
                             color: "#FFFFFF"
                             renderType: Text.NativeRendering
@@ -276,9 +276,9 @@ Rectangle {
                 }
 
                 ToggleSwitch {
-                    checked: root.mockDarkMode
+                    checked: systemInfo.darkMode
                     onToggled: function(state) {
-                        root.mockDarkMode = state
+                        systemInfo.darkMode = state
                         console.log("Dark mode:", state ? "ON" : "OFF")
                     }
                 }
@@ -311,12 +311,12 @@ Rectangle {
 
                 InputField {
                     id: cpuWarnInput
-                    value: root.mockCpuWarn
+                    value: systemInfo.cpuWarnThreshold
                     minValue: 50
                     maxValue: 95
                     suffix: "%"
                     onValueChanged: {
-                        root.mockCpuWarn = cpuWarnInput.value
+                        systemInfo.cpuWarnThreshold = cpuWarnInput.value
                         console.log("CPU warning threshold:", cpuWarnInput.value)
                     }
                 }
@@ -341,12 +341,12 @@ Rectangle {
                 
                 InputField {
                     id: cpuCritInput
-                    value: root.mockCpuCrit
+                    value: systemInfo.cpuCritThreshold
                     minValue: 50
                     maxValue: 95
                     suffix: "%"
                     onValueChanged: {
-                        root.mockCpuCrit = cpuCritInput.value
+                        systemInfo.cpuCritThreshold = cpuCritInput.value
                         console.log("CPU critical threshold:", cpuCritInput.value)
                     }
                 }
@@ -371,12 +371,12 @@ Rectangle {
                 
                 InputField {
                     id: ramWarnInput
-                    value: root.mockRamWarn
+                    value: systemInfo.ramWarnThreshold
                     minValue: 50
                     maxValue: 95
                     suffix: "%"
                     onValueChanged: {
-                        root.mockRamWarn = ramWarnInput.value
+                        systemInfo.ramWarnThreshold = ramWarnInput.value
                         console.log("RAM warning threshold:", ramWarnInput.value)
                     }
                 }
@@ -401,7 +401,7 @@ Rectangle {
                 }
                 clip: true
                 spacing: 4
-                model: root.mockLogs
+                model: systemInfo.systemLogs
 
                 delegate: Row {
                     spacing: 6
@@ -502,16 +502,16 @@ Rectangle {
 
         onClicked: {
             console.log("Saving settings...")
-            console.log("Update interval:", root.mockUpdateInterval)
-            console.log("Dark mode:", root.mockDarkMode)
-            console.log("Sound alert:", root.mockSoundAlert)
-            console.log("CPU warn:", root.mockCpuWarn)
-            console.log("CPU crit:", root.mockCpuCrit)
-            console.log("RAM warn:", root.mockRamWarn)
-            
-            // TODO: Save to backend
-            // settings.save()
-            
+            console.log("Update interval:", systemInfo.updateInterval)
+            console.log("Dark mode:", systemInfo.darkMode)
+            console.log("Sound alert:", systemInfo.soundAlert)
+            console.log("CPU warn:", systemInfo.cpuWarnThreshold)
+            console.log("CPU crit:", systemInfo.cpuCritThreshold)
+            console.log("RAM warn:", systemInfo.ramWarnThreshold)
+
+            // Save to backend
+            systemInfo.saveSettings()
+
             // Show success feedback (could add toast/snackbar)
             console.log("Settings saved successfully!")
         }

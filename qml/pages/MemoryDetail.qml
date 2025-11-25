@@ -110,7 +110,7 @@ Rectangle {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
 
-                    if (root.mockRamUsedM <= 0) return;
+                    if (systemInfo.ramUsage <= 0) return;
 
                     var centerX = width / 2;
                     var centerY = height / 2;
@@ -118,7 +118,7 @@ Rectangle {
 
                     // Start at top (12 o'clock = -90°)
                     var startAngle = -Math.PI /2;
-                    var endAngle = startAngle + (2 * Math.PI * root.mockRamUsage / 100);
+                    var endAngle = startAngle + (2 * Math.PI * systemInfo.ramUsage / 100);
 
                     // Create gradient (Blue -> Cyan)
                     var gradient = ctx.createLinearGradient(
@@ -157,7 +157,7 @@ Rectangle {
                 // Percentage Text
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: root.mockRamUsage + "%"
+                    text: systemInfo.ramUsage + "%"
                     font.family: "DejaVu Sans"
                     font.pixelSize: 24
                     font.bold: true
@@ -213,7 +213,7 @@ Rectangle {
                 
                 // Used memory text
                 Text {
-                    text: "Used: " + root.mockRamUsed + " / " + root.mockRamTotal
+                    text: "Used: " + systemInfo.ramUsed + " / " + root.mockRamTotal
                     font.family: "DejaVu Sans"
                     font.pixelSize: 10
                     color: "#FFFFFF"
@@ -227,7 +227,7 @@ Rectangle {
                     spacing: 10
 
                     Text {
-                        text: "Free: " + root.mockRamFree
+                        text: "Free: " + systemInfo.ramFree
                         font.family: "DejaVu Sans"
                         font.pixelSize: 8
                         color: "#B0B8C8"
@@ -237,7 +237,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: "Cache: " + root.mockCache
+                        text: "Cache: " + systemInfo.ramCache
                         font.family: "DejaVu Sans"
                         font.pixelSize: 8
                         color: "#B0B8C8"

@@ -110,6 +110,7 @@ Window {
     // Listen for navigation events from current page
     Connections {
         target: stackView.currentItem
+        ignoreUnknownSignals: true  // Ignore signals that don't exist on current page
 
         // Handle back button clicks from DetailHeader
         function onBackRequested() {
@@ -126,12 +127,12 @@ Window {
             }
             stackView.push(settingsComponent)
         }
-        
+
         // Handle bottom nav clicks
         function onNavigationRequested(index) {
             // Pop to dashboard first
             stackView.pop(null)
-            
+
             // Then push desired page (if not dashboard)
             if (index === 1) stackView.push(cpuDetailComponent)
             if (index === 2) stackView.push(memoryDetailComponent)

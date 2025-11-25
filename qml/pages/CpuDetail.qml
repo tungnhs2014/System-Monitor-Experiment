@@ -37,6 +37,26 @@ Rectangle {
     // Per-core usage (4 cores)
     property var mockCoreUsages: [57, 62, 45,72]
 
+    // ==================== DEBUG ====================
+    Component.onCompleted: {
+        console.log("=== CpuDetail DEBUG ===")
+        console.log("CPU Usage:", systemInfo.cpuUsage)
+        console.log("CPU Temp:", systemInfo.cpuTemp)
+        console.log("CPU Clock:", systemInfo.cpuClock)
+        console.log("Core Usages:", JSON.stringify(systemInfo.coreUsages))
+        console.log("Temp History length:", systemInfo.tempHistory.length)
+    }
+
+    Connections {
+        target: systemInfo
+        function onCoreUsagesChanged() {
+            console.log("Core usages updated:", JSON.stringify(systemInfo.coreUsages))
+        }
+        function onTempHistoryChanged() {
+            console.log("Temp history updated, length:", systemInfo.tempHistory.length)
+        }
+    }
+
     // ==================== HEADER ====================
     DetailHeader {
         id: header
@@ -104,7 +124,7 @@ Rectangle {
                 LineChart {
                     width: 288
                     height: 45
-                    dataPoints: systemInfo.mockTempHistory
+                    dataPoints: systemInfo.tempHistory
                     lineColor: "#4CAF50" // Green for temp
                     minValue: 60
                     maxValue: 80
@@ -150,8 +170,8 @@ Rectangle {
 
             // Core bars (4 cores)
             Repeater {
-                model: systemInfo.mockCoreUsages
-                
+                model: systemInfo.coreUsages
+
                 CoreUsageBar {
                     width: 304
                     coreIndex: index

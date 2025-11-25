@@ -90,10 +90,10 @@ Rectangle {
             PartitionBar {
                 width: 304
                 partitionName: root.mockRootName
-                totalSize: root.mockRootTotal
-                usage: root.mockRootUsage
-                usedSize: root.mockRootUsed
-                freeSize: root.mockRootFree
+                totalSize: systemInfo.hddTotal
+                usage: systemInfo.hddUsage
+                usedSize: systemInfo.hddUsed
+                freeSize: systemInfo.hddFree
             }
 
             // ==================== SWAP PARTITION ====================
@@ -101,10 +101,10 @@ Rectangle {
             PartitionBar {
                 width: 304
                 partitionName: root.mockSwapName
-                totalSize: root.mockSwapTotal
-                usage: root.mockSwapUsage
-                usedSize: root.mockSwapUsed
-                freeSize: root.mockSwapFree
+                totalSize: systemInfo.swapTotal
+                usage: systemInfo.swapUsage
+                usedSize: systemInfo.swapUsed
+                freeSize: systemInfo.swapFree
             }
 
             // ==================== I/O STATISTICS CARD ====================
@@ -138,7 +138,7 @@ Rectangle {
                     LineChart {
                         width: 288
                         height: 20
-                        dataPoints: root.mockIoHistory
+                        dataPoints: systemInfo.ioHistory
                         lineColor: "#FFEB3B"  // Yellow for I/O
                         smoothLine: true
                     }
@@ -152,7 +152,7 @@ Rectangle {
                 spacing: 10
 
                 Text {
-                    text: "Read: " + root.mockReadSpeed
+                    text: "Read: " + systemInfo.ioRead
                     font.family: "DejaVu Sans"
                     font.pixelSize: 8
                     color: "#B0B8C8"
@@ -162,7 +162,7 @@ Rectangle {
                 }
 
                 Text {
-                    text: "Write: " + root.mockWriteSpeed
+                    text: "Write: " + systemInfo.ioWrite
                     font.family: "DejaVu Sans"
                     font.pixelSize: 8
                     color: "#B0B8C8"
