@@ -46,6 +46,7 @@ set(SOURCES
     src/monitors/MemoryMonitor.cpp
     src/monitors/StorageMonitor.cpp
     src/monitors/NetworkMonitor.cpp
+    src/monitors/SettingsManager.cpp
     src/utils/FileReader.cpp
 )
 
@@ -57,6 +58,7 @@ set(HEADERS
     src/monitors/MemoryMonitor.h
     src/monitors/StorageMonitor.h
     src/monitors/NetworkMonitor.h
+    src/monitors/SettingsManager.h
     src/utils/FileReader.h
 )
 
