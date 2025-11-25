@@ -41,24 +41,24 @@ endif()
 set(SOURCES
     main.cpp
     src/SystemInfo.cpp
+    src/SettingsManager.cpp
     src/monitors/CpuMonitor.cpp
     src/monitors/GpuMonitor.cpp
     src/monitors/MemoryMonitor.cpp
     src/monitors/StorageMonitor.cpp
     src/monitors/NetworkMonitor.cpp
-    src/monitors/SettingsManager.cpp
     src/utils/FileReader.cpp
 )
 
 # Header files
 set(HEADERS
     src/SystemInfo.h
+    src/SettingsManager.h
     src/monitors/CpuMonitor.h
     src/monitors/GpuMonitor.h
     src/monitors/MemoryMonitor.h
     src/monitors/StorageMonitor.h
     src/monitors/NetworkMonitor.h
-    src/monitors/SettingsManager.h
     src/utils/FileReader.h
 )
 
