@@ -85,6 +85,7 @@ Rectangle {
             left: parent.left
             right: parent.right
             bottom: bottomNav.top
+            bottomMargin: 12
         }
 
         // ==================== TEMPERATURE CHART CARD ====================

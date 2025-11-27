@@ -11,8 +11,47 @@
 #include <QQmlContext>
 #include <QtDebug>
 #include <QFont>
+#include <QDir>
+#include <QFile>
 
 #include "SystemInfo.h"
+
+#ifdef PLATFORM_RASPBERRY_PI
+/**
+ * Auto-detect XPT2046 touch input device by checking device name in sysfs
+ * This is the professional and accurate method to find the correct input device
+ */
+QString findTouchDevice() {
+    // Search through all input event devices
+    for (int i = 0; i < 10; i++) {
+        QString eventNum = QString::number(i);
+        QString sysPath = QString("/sys/class/input/event%1/device/name").arg(i);
+
+        QFile nameFile(sysPath);
+        if (nameFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString deviceName = QString::fromUtf8(nameFile.readAll()).trimmed();
+            nameFile.close();
+
+            qDebug() << "event" << i << ":" << deviceName;
+
+            // Check if this is our XPT2046 touchscreen
+            if (deviceName.contains("XPT2046", Qt::CaseInsensitive) ||
+                deviceName.contains("ADS7846", Qt::CaseInsensitive) ||
+                deviceName.contains("Touchscreen", Qt::CaseInsensitive)) {
+
+                QString devicePath = QString("/dev/input/event%1").arg(i);
+                qInfo() << "✓ Touch device found:" << devicePath << "-" << deviceName;
+                return devicePath;
+            }
+        }
+    }
+
+    // Fallback: if not found, use event0 (first input device)
+    qWarning() << "⚠ XPT2046 touch device not found, using fallback: /dev/input/event0";
+    qWarning() << "→ Check if ili9341-touch kernel module is loaded: lsmod | grep ili9341_touch";
+    return "/dev/input/event0";
+}
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -25,16 +64,20 @@ int main(int argc, char *argv[])
     app.setApplicationName("System Monitor");
     app.setApplicationVersion("1.0.0");
 
-#ifdef TARGET_PI
-    qputenv("QT_QPA_PLATFORM", "linuxfb:fb=/dev/fb1");
-    qputenv("QT_QPA_FB_FORCE_FULLSCREEN", "1");
+#ifdef PLATFORM_RASPBERRY_PI
+    qputenv("QT_QPA_PLATFORM", "linuxfb:fb=/dev/fb1:size=320x240:mmSize=60x45:offset=0x0");
     
-    qputenv("QSG_RENDER_LOOP", "basic");
+    QString touchDevice = findTouchDevice();
     
-    // Touch input
-    qputenv("QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS", "/dev/input/event0");
+    QByteArray touchParams = QString("%1:rotate=0:invertx=0:inverty=0")
+                            .arg(touchDevice).toUtf8();
+    qputenv("QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS", touchParams);
+    
+    // Force evdevtouch plugin
+    qputenv("QT_QPA_GENERIC_PLUGINS", QString("evdevtouch:%1").arg(touchDevice).toUtf8());
 
     qDebug() << "Running on Raspberry Pi - RGB565 mode";
+    qDebug() << "Touch device configured:" << touchDevice;
 #else
     qDebug() << "Running on Desktop";
 #endif

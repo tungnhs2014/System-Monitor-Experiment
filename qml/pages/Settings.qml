@@ -93,7 +93,7 @@ Rectangle {
             top: tabBar.bottom
             left: parent.left
             right: parent.right
-            // bottom.saveButton.top
+            bottom: tabBar.currentIndex === 0 ? bottomNav.top : saveButton.top
             margins: 8
         }
 
@@ -499,6 +499,7 @@ Rectangle {
         height: 30
         text: "Save Changes"
         buttonColor: "#4CAF50"  // Green
+        visible: tabBar.currentIndex !== 0  // Hide on System tab (index 0)
 
         onClicked: {
             console.log("Saving settings...")

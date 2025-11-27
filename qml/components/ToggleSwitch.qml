@@ -6,7 +6,7 @@
  */
 
 import QtQuick 2.15
-import Qt5Compat.GraphicalEffects
+// import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -73,15 +73,15 @@ Item {
         }
 
         // Shadow effect (subtle)
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 1
-            verticalOffset: 1
-            radius: 2
-            samples: 5
-            color: Qt.rgba(0, 0, 0, 0.3)
-        }
+        // layer.enabled: true
+        // layer.effect: DropShadow {
+        //     transparentBorder: true
+        //     horizontalOffset: 1
+        //     verticalOffset: 1
+        //     radius: 2
+        //     samples: 5
+        //     color: Qt.rgba(0, 0, 0, 0.3)
+        // }
     }
 
     // Import for DropShadow
@@ -97,7 +97,7 @@ Item {
 
         onClicked: {
             root.checked = !root.checked
-            root.toggle(root.checked)
+            root.toggled(root.checked)
         }
 
         // Visual feedback on press (optional)

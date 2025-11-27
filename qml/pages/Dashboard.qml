@@ -83,14 +83,15 @@ Rectangle {
                         value: systemInfo.cpuUsage
                         startColor: "#9C27B0"
                         endColor: "#2196F3"
-                        fontSize: 18
-                        strokeWidth: 3
+                        fontSize: 14
+                        strokeWidth: 2
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
                         anchors.verticalCenter: parent.verticalCenter
 
                         MouseArea {
                             anchors.fill: parent
+                            anchors.margins: -10 
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 root.navigationRequested(1)  // Navigate to CPU (index 1)
@@ -99,10 +100,9 @@ Rectangle {
                     }
 
                     Column {
-                        width: 32
-                        spacing: 0
+                        width: 35
+                        spacing: 2
                         anchors.right: parent.right
-                        anchors.rightMargin: 2
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -118,7 +118,7 @@ Rectangle {
                         }
                         Text {
                             text: systemInfo.cpuTemp + "°"
-                            font.pixelSize: 11
+                            font.pixelSize: 10
                             font.bold: true
                             font.family: "DejaVu Sans"
                             font.hintingPreference: Font.PreferFullHinting
@@ -132,7 +132,7 @@ Rectangle {
 
                 Item {
                     width: parent.width
-                    height: 6
+                    height: 10
 
                     Text {
                         anchors.bottom: parent.bottom
@@ -165,7 +165,7 @@ Rectangle {
                     spacing: 2
 
                     Text {
-                        text: "📊"
+                        text: "🎮"
                         font.pixelSize: 10
                         font.family: "DejaVu Sans"
                         font.hintingPreference: Font.PreferFullHinting
@@ -196,14 +196,15 @@ Rectangle {
                         value: systemInfo.gpuUsage
                         startColor: "#00BCD4"
                         endColor: "#2196F3"
-                        fontSize: 18
-                        strokeWidth: 3
+                        fontSize: 14
+                        strokeWidth: 2
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
                         anchors.verticalCenter: parent.verticalCenter
 
                         MouseArea {
                             anchors.fill: parent
+                            anchors.margins: -10 
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 root.navigationRequested(2)  // Navigate to Memory (index 2)
@@ -245,12 +246,12 @@ Rectangle {
 
                 Item {
                     width: parent.width
-                    height: 6
+                    height: 10
 
                     Text {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "MEM " + systemInfo.gpuMemUsage + "M" 
+                        text: "MEM " + systemInfo.gpuMemUsage + "M"
                         font.pixelSize: 8
                         font.bold: true
                         font.family: "DejaVu Sans"
@@ -365,14 +366,15 @@ Rectangle {
                         startColor: "#2196F3"
                         endColor: "#2196F3"
                         useGradient: false
-                        fontSize: 18
-                        strokeWidth: 3
+                        fontSize: 14
+                        strokeWidth: 2
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
                         anchors.verticalCenter: parent.verticalCenter
 
                         MouseArea {
                             anchors.fill: parent
+                            anchors.margins: -10 
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 root.navigationRequested(3)  // Navigate to RAM (index 3)
@@ -414,7 +416,7 @@ Rectangle {
 
                 Item {
                     width: parent.width
-                    height: 6
+                    height: 10
 
                     Text {
                         anchors.bottom: parent.bottom
@@ -489,6 +491,7 @@ Rectangle {
 
                             MouseArea {
                                 anchors.fill: parent
+                                anchors.margins: -10 
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     root.navigationRequested(4)  // Navigate to Network (index 3)

@@ -54,11 +54,13 @@ Rectangle {
 
         Text {
             anchors.centerIn: parent
-            text: "🖥️"
-            font.pixelSize: 18
+            text: "⚙"
+            font.family: "DejaVu Sans"
+            font.pixelSize: 16
             font.hintingPreference: Font.PreferFullHinting
             renderType: Text.NativeRendering
             antialiasing: false
+            color: "#B0B8C8"
         }
 
         MouseArea {

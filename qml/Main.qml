@@ -33,6 +33,13 @@ Window {
 
     color: "#0F1419"
 
+    // Performance optimizations for embedded
+    Component.onCompleted: {
+        // Disable unnecessary visual updates
+        contentItem.smooth = false
+        contentItem.antialiasing = false
+    }
+
     // ==================== NAVIGATION STACK ====================
     StackView {
         id: stackView

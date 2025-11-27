@@ -20,7 +20,7 @@ Rectangle {
 
     Row {
         anchors.centerIn: parent
-        spacing: 40
+        spacing: 25
 
         NavButton {
             icon: "🏠"
@@ -54,8 +54,8 @@ Rectangle {
     }
 
     component NavButton: Item {
-        width: 32
-        height: 32
+        width: 44
+        height: 44
 
         property string icon: ""
         property bool active: false

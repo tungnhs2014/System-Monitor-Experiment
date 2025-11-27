@@ -54,8 +54,8 @@ Rectangle {
             leftMargin: 8
             verticalCenter: parent.verticalCenter
         }
-        width: 30
-        height: 30
+        width: 44
+        height: 44
         visible: root.showBackButton
 
         // Back arrow text

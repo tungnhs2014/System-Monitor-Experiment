@@ -61,6 +61,7 @@ Rectangle {
             left: parent.left
             right: parent.right
             bottom: bottomNav.top
+            bottomMargin: 12
         }
         
         // ==================== LARGE CIRCULAR GAUGE ====================
@@ -138,6 +139,19 @@ Rectangle {
                 }
 
                 Component.onCompleted: requestPaint()
+
+                // Throttle repaint to avoid excessive updates
+                property int lastRamUsage: 0
+                Connections {
+                    target: systemInfo
+                    function onRamUsageChanged() {
+                        // Only repaint if change is significant (>= 1%)
+                        if (Math.abs(systemInfo.ramUsage - progressArc.lastRamUsage) >= 1) {
+                            progressArc.lastRamUsage = systemInfo.ramUsage
+                            progressArc.requestPaint()
+                        }
+                    }
+                }
             }
 
             // Center content (icon + percentage)

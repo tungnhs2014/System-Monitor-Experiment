@@ -43,7 +43,7 @@ SystemInfo::SystemInfo(QObject *parent)
     , m_kernelVersion("Unknown")
     , m_uptime("0s")
     , m_systemTime("N/A")
-    , m_updateInterval(2)
+    , m_updateInterval(3)  // Increased to 3s for better performance on slow hardware
     , m_darkMode(true)
     , m_soundAlert(false)
     , m_cpuWarnThreshold(70)
@@ -75,6 +75,9 @@ SystemInfo::SystemInfo(QObject *parent)
         m_systemLogs = m_settingsManager->getSystemLogs();
         emit systemLogsChanged();
     });
+
+    // Load initial logs
+    m_systemLogs = m_settingsManager->getSystemLogs();
 
     // ==================== CREATE UPDATE TIMER ====================
     m_updateTimer = new QTimer(this);
