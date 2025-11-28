@@ -104,39 +104,3 @@ int main(int argc, char *argv[])
     
     return app.exec();
 }
-
-/*
- * ============================================
- * HƯỚNG DẪN SỬ DỤNG:
- * ============================================
- *
- * CÁCH 1: Command-line argument (Linh hoạt nhất)
- * ------------------------------------------------
- * Không cần sửa code, chỉ chạy với tham số:
- *
- * ./ili9341-system               # Chạy Main.qml (default)
- * ./ili9341-system memory        # Chạy Memory Detail
- * ./ili9341-system cpu           # Chạy CPU Detail
- * ./ili9341-system storage       # Chạy Storage Detail
- * ./ili9341-system dashboard     # Chạy Dashboard
- *
- * CÁCH 2: Hardcode (Nhanh cho testing)
- * -------------------------------------
- * Comment out phần "OPTION 1", uncomment "OPTION 2":
- *
- * qmlFile = "qrc:/qml/Main_MemoryDetail.qml";
- *
- * Sau đó recompile:
- * cd build && make && ./ili9341-system
- *
- * ============================================
- * LƯU Ý:
- * ============================================
- *
- * 1. Các file Main_*.qml phải có trong qml.qrc
- * 2. Sau khi sửa qml.qrc, phải rebuild:
- *    cd build && cmake .. && make
- * 3. Command-line argument chỉ work nếu code OPTION 1 active
- *
- * ============================================
- */

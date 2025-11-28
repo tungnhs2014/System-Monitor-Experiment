@@ -59,7 +59,7 @@ message(STATUS "Target Platform: ${PLATFORM_NAME}")
 
 # --- MODEL Layer ---
 set(MODEL_SOURCES
-    #src/model/CpuMonitor.cpp
+    src/model/CpuMonitor.cpp
     # src/model/GpuMonitor.cpp
     # src/model/MemoryMonitor.cpp
     # src/model/StorageMonitor.cpp
@@ -68,7 +68,7 @@ set(MODEL_SOURCES
 )
 
 set(MODEL_HEADERS
-    # src/model/CpuMonitor.h
+    src/model/CpuMonitor.h
     # src/model/GpuMonitor.h
     # src/model/MemoryMonitor.h
     # src/model/StorageMonitor.h

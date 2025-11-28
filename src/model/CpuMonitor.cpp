@@ -17,20 +17,26 @@ CpuMonitor::CpuMonitor(QObject *parent)
     : QObject(parent)
     , m_prevTotal(0)
     , m_prevIdle(0)
+    , m_coreCount(DEFAULT_CORE_COUNT)
 {
-    // Initialize with 4 cores for Raspberry Pi 3B+
-    m_prevCoreStats.resize(4);
+    // Detect number of cores
+    QDir cpuDir("/sys/devices/system/cpu");
+    QStringList cpuDirs = cpuDir.entryList(QStringList() << "cpu[0-9]*", QDir::Dirs);
+    if (!cpuDirs.isEmpty()) {
+        m_coreCount = cpuDirs.size();
+    }
 
-    // Reserve space for temperature history
+    // Initalize per-core stats
+    m_prevCoreStats.resize(m_coreCount);
+
+    // Reserve temperature history buffer
     m_tempHistory.reserve(MAX_TEMP_HISTORY);
+    
+    // Find temperartue sensor path
 
-    qDebug() << "CpuMonitor initialized - 4 cores, temp history buffer:" << MAX_TEMP_HISTORY;
-
-#ifdef PLATFORM_RASPBERRY_PI
-    qDebug() << "Platform Rasberry Pi (compile-time detected)";
-#else
-    qDebug() << "Platform: Desktop/Ubuntu (compile-time detected)";
-#endif
+        LOG_INFO(QString("CpuMonitor initialized - %1 cores, temp sensor: %2")
+             .arg(m_coreCount)
+             .arg(m_tempSensorPath.isEmpty() ? "not found" : m_tempSensorPath));
 }
 
 int CpuMonitor::parseUsage()
@@ -62,166 +68,69 @@ int CpuMonitor::parseUsage()
         return 0;
     }
 
-    int usage = 100 * (totalDelta - idleDelta) / totalDelta;
+    int usage = static_cast<int>(100 * (totalDelta - idleDelta) / totalDelta);
     return qBound(0, usage, 100);
 }
 
 int CpuMonitor::parseTemp()
 {
-    // Platform-specific temperature reading
-#ifdef PLATFORM_RASPBERRY_PI
-    // Raspberry Pi: Always use thermal_zone0
-    QString tempStr = FileReader::readFile("/sys/class/thermal/thermal_zone0/temp");
-
-    if (tempStr.isEmpty()) {
-        // Only warn once
-        static bool warned = false;
-        if (!warned) {
-            qWarning() << "Failed to read Raspberry Pi temperature sensor";
-            warned = true;
-        }
-        return 0;
-    }
-    
-    bool ok;
-    int tempMilliDegrees = tempStr.toInt(&ok);
-
-    if (!ok) {
+    if (m_tempSensorPath.isEmpty()) {
         return 0;
     }
 
-    // Convert from millidegrees to degrees
+    int tempMilliDegrees = FileReader::readInt(m_tempSensorPath, 0);
+
+    if (tempMilliDegrees == 0) {
+        return 0;
+    }
+
+    // Convert from millidegrees to degrees Celsius
     return tempMilliDegrees / 1000;
-
-#else
-    // Desktop/Ubuntu: Try multiple sources
-
-    // Try hwmon (coretemp on Ubuntu)
-    QStringList hwmonPaths = {
-        "/sys/class/hwmon/hwmon0/temp1_input",
-        "/sys/class/hwmon/hwmon1/temp1_input",
-        "/sys/class/hwmon/hwmon2/temp1_input",
-        "/sys/class/thermal/thermal_zone0/temp"  // Fallback
-    };
-    
-    for (const QString &path: hwmonPaths) {
-        if (!FileReader::fileExits(path)) {
-            continue;
-        }
-
-        QString tempStr = FileReader::readFile(path);
-        if (tempStr.isEmpty()) {
-            continue;
-        }
-
-        bool ok;
-        int tempValue = tempStr.toInt(&ok);
-        if (!ok) {
-            continue;
-        }
-
-        // Found working sensor
-        static bool firstRead = true;
-        if (firstRead) {
-            qDebug() << "Temperature sensor found at: " << path;
-            firstRead = false;
-        }
-
-        // Convert from millidegrees to degrees
-        return tempValue / 1000;
-    }
-
-    // No sensor found - this is normal on VMs
-    static bool warnedNoSensor = false;
-    if (!warnedNoSensor) {
-        qWarning() << "No temperature sensor found (normal on VMs)";
-        warnedNoSensor = true;
-    }
-    return 0;
-#endif
 }
 
 QString CpuMonitor::parseClock()
 {
-    // Platform-specific clock reading
-#ifdef PLATFORM_RASPBERRY_PI
-    // Raspberry Pi: Always use scaling_cur_freq
-    QString freqStr = FileReader::readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-    
-    if (freqStr.isEmpty()) {
-        return "N/A";
-    }
-
-    bool ok;
-    int freqKHz = freqStr.toInt(&ok);
-
-    if (!ok) {
-        return "N/A";
-    }
-
-    // Convert to GHz
-    double freqGHz = freqKHz / 1000000.0;
-    return QString::number(freqGHz, 'f', 1) + "G";
-#else 
-     // Desktop/Ubuntu: Try multiple sources
-    QStringList clockPaths = {
+    // Try multiple paths for CPU frequency
+    QStringList freqPaths = {
         "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq",
         "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq"
     };
     
-    for (const QString &path : clockPaths) {
-        QString freqStr = FileReader::readFirstLine(path);
-        if (freqStr.isEmpty()) {
+    for (const QString &path : freqPaths) {
+        if (!FileReader::fileExists(path)) {
             continue;
         }
         
-        bool ok;
-        int freqKHz = freqStr.toInt(&ok);
-        if (!ok) {
-            continue;
+        int freqKHz = FileReader::readInt(path, 0);
+        if (freqKHz > 0) {
+            // Convert tp GHz with 1 decimal place
+            double freqGHz = freqKHz / 1000000.0;
+            return QString::number(freqGHz, 'f', 1) + "G";
         }
-        
-        // Found working sensor
-        double freqGHz = freqKHz / 1000000.0;
-        return QString::number(freqGHz, 'f', 1) + "G";
     }
-
-    // No frequency info (normal on some systems)
-    static bool warnedNoClock = false;
-    if (!warnedNoClock) {
-        qWarning() << "CPU frequency not available (normal on VMs/fixed frequency systems)";
-        warnedNoClock = true;
-    }
+    
     return "N/A";
-#endif
 }
 
 QVariantList CpuMonitor::parsePerCoreUsage()
 {
     QVariantList result;
-
-    // Parse usage for each of 4 cores
-    for (int i = 0; i < 4; i++) {
+    
+    for (int i = 0; i < m_coreCount; ++i) {
         CoreStats currentStats = readCoreStats(i);
-
-        // Calculate usage from previous and current stats
         int usage = calculateCoreUsage(m_prevCoreStats[i], currentStats);
-
-        // Store current stats for next calculation
         m_prevCoreStats[i] = currentStats;
-
-        // Add to result list
         result.append(usage);
     }
+    
     return result;
 }
 
 void CpuMonitor::updateTempHistory(int temp)
 {
-    // Add new temperature to history
     m_tempHistory.append(temp);
 
-    // Keep only last MAX_TEMP_HISTORY values (circular buffer behavior)
+    // Maintain circular buffer behavior
     if (m_tempHistory.size() > MAX_TEMP_HISTORY) {
         m_tempHistory.removeFirst();
     }
@@ -230,6 +139,7 @@ void CpuMonitor::updateTempHistory(int temp)
 QVariantList CpuMonitor::getTempHistory() const
 {
     QVariantList result;
+    result.reserve(m_tempHistory.size());
 
     // Convert QVector<int> to QVariantList for QML
     for (int temp : m_tempHistory) {
@@ -239,10 +149,28 @@ QVariantList CpuMonitor::getTempHistory() const
     return result;
 }
 
+QString CpuMonitor::parseLoadAverage()
+{
+    QString loadStr = FileReader::readFirstLine("/proc/loadavg");
+
+    if (loadStr.isEmpty()) {
+        return "N/A";
+    }
+
+    // Format: "0.00 0.01 0.05 1/234 5678"
+    // We want first 3 values
+    QStringList parts = loadStr.split(' ', Qt::SkipEmptyParts);
+
+    if (parts.size() >= 3) {
+        return QString("%1 %2 %3").arg(parts[0], parts[1], parts[2]);
+    }
+
+    return "N/A";
+}
+
 bool CpuMonitor::parseCpuStats(unsigned long long &total, unsigned long long &idle)
 {
-    // Read /proc/stat
-    QStringList lines = FileReader::readLines("/proc/stat");
+    QStringList lines = FileReader::readLines(App::Path::PROC_STAT);
 
     if (lines.isEmpty()) {
         return false;
@@ -255,21 +183,20 @@ bool CpuMonitor::parseCpuStats(unsigned long long &total, unsigned long long &id
         return false;
     }
 
-    // Split and parse values
     QStringList parts = cpuLine.split(' ', Qt::SkipEmptyParts);
 
     if (parts.size() < 5) {
         return false;
     }
 
-    // Parse CPU times
-    unsigned long long user = parts[1].toLongLong();
-    unsigned long long nice = parts[2].toLongLong();
-    unsigned long long system = parts[3].toLongLong();
-    unsigned long long idleTime  = parts[4].toLongLong();
-    unsigned long long iowait = (parts.size() > 5) ? parts[5].toLongLong() : 0;
-    unsigned long long irq = (parts.size() > 6) ? parts[6].toLongLong() : 0;
-    unsigned long long softirq  = (parts.size() > 7) ? parts[7].toLongLong() : 0;
+    // Parse CPU times (skip "cpu" label at index 0)
+    unsigned long long user = parts[1].toULongLong();
+    unsigned long long nice = parts[2].toULongLong();
+    unsigned long long system = parts[3].toULongLong();
+    unsigned long long idleTime = parts[4].toULongLong();
+    unsigned long long iowait = (parts.size() > 5) ? parts[5].toULongLong() : 0;
+    unsigned long long irq = (parts.size() > 6) ? parts[6].toULongLong() : 0;
+    unsigned long long softirq = (parts.size() > 7) ? parts[7].toULongLong() : 0;
 
     // Calculate total and idle
     total = user + nice + system + idleTime + iowait + irq + softirq;
@@ -282,24 +209,19 @@ CpuMonitor::CoreStats CpuMonitor::readCoreStats(int coreNum)
 {
     CoreStats stats;
 
-    // Read /proc/stat file (same on all platforms)
-    QFile file("/proc/stat");
+    QFile file(App::Path::PROC_STAT);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Failed to opennn /proc/stat";
         return stats;
     }
 
-    QTextStream in(&file);
-    QString line;
+    QTextStream stream(&file);
     QString searchStr = QString("cpu%1 ").arg(coreNum);
 
     // Search for the line starting with "cpu0 ", "cpu1 ", etc.
-    while (!in.atEnd()) {
-        line = in.readLine();
+    while (!stream.atEnd()) {
+        QString line = stream.readLine();
 
         if (line.startsWith(searchStr)) {
-            // Parse the line
-            // Format: "cpu0 user nice system idle iowait irq softirq steal guest guest_nice"
             QStringList parts = line.split(' ', Qt::SkipEmptyParts);
 
             if (parts.size() >= 8) {
@@ -327,7 +249,7 @@ int CpuMonitor::calculateCoreUsage(const CoreStats &prev, const CoreStats &curr)
     
     // Calculate total time for current reading
     unsigned long long currTotal = curr.user + curr.nice + curr.system + 
-                                    curr.idle + curr.iowait + curr.irq + curr.softirq;
+                                   curr.idle + curr.iowait + curr.irq + curr.softirq;
     
     // Calculate idle time
     unsigned long long prevIdle = prev.idle + prev.iowait;
@@ -344,8 +266,27 @@ int CpuMonitor::calculateCoreUsage(const CoreStats &prev, const CoreStats &curr)
     
     // Calculate usage percentage
     // Usage = (Total - Idle) / Total * 100
-    int usage = (100 * (deltaTotal - deltaIdle)) / deltaTotal;
-    
-    // Clamp to 0-100 range
+    int usage = static_cast<int>((100 * (deltaTotal - deltaIdle)) / deltaTotal);
     return qBound(0, usage, 100);
+}
+
+QString CpuMonitor::findTempSensorPath()
+{
+    // Priority list of temperature sensor paths
+    QStringList sensorPaths = {
+        "/sys/class/thermal/thermal_zone0/temp",           // Raspberry Pi, most Linux
+        "/sys/class/hwmon/hwmon0/temp1_input",             // Intel coretemp
+        "/sys/class/hwmon/hwmon1/temp1_input",
+        "/sys/class/hwmon/hwmon2/temp1_input",
+        "/sys/devices/virtual/thermal/thermal_zone0/temp"  // Fallback
+    };
+
+    for (const QString& path: sensorPaths) {
+        if (FileReader::fileExists(path)) {
+            return path;
+        }
+    }
+
+    LOG_WARNING("No temperature sensor found");
+    QString();
 }
