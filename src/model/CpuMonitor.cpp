@@ -1,15 +1,17 @@
 /**
  * ============================================
- * File: src/monitors/CpuMonitor.cpp
+ * File: src/model/CpuMonitor.cpp
  * Description: CPU monitoring implementation
  * ============================================
  */
 
 #include "CpuMonitor.h"
 #include "FileReader.h"
-#include <QDebug>
+#include "Constants.h"
+#include "Logger.h"
 #include <QFile>
 #include <QTextStream>
+#include <QDir>
 
 CpuMonitor::CpuMonitor(QObject *parent) 
     : QObject(parent)

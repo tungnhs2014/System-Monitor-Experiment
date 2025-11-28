@@ -67,7 +67,7 @@ void Logger::log(Level level, const QString &message, const QString &source)
         writeToFile(entry);
     }
 
-    emit logChanged();
+    emit logsChanged();
     emit newLogEntry(entry);
 }
 
@@ -118,7 +118,7 @@ void Logger::clearLogs()
 {
     QMutexLocker locker(&m_mutex);
     m_logs.clear();
-    emit logChanged();
+    emit logsChanged();
 }
 
 bool Logger::exportLogs(const QString &filePath)

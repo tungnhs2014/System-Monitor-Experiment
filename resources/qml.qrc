@@ -1,29 +1,29 @@
-<RCC>
+<RCC version="1.0" >
     <qresource prefix="/">
-        <!-- Main -->
-        <file>../qml/Main.qml</file>
+        <!-- Main QML -->
+        <file alias="qml/Main.qml">../qml/Main.qml</file>
 
         <!-- Pages -->
-        <file>../qml/pages/Dashboard.qml</file>
-        <file>../qml/pages/MemoryDetail.qml</file>
-        <file>../qml/pages/CpuDetail.qml</file>
-        <file>../qml/pages/StorageDetail.qml</file>
-        <file>../qml/pages/NetworkDetail.qml</file>
-        <file>../qml/pages/Settings.qml</file>
-
-        <!-- Componets-->
-        <file>../qml/components/BottomNav.qml</file>
-        <file>../qml/components/CardContainer.qml</file>
-        <file>../qml/components/CircularGauge.qml</file>
-        <file>../qml/components/ProgressBar.qml</file>
-        <file>../qml/components/TopBar.qml</file>
-        <file>../qml/components/DetailHeader.qml</file>
-        <file>../qml/components/LineChart.qml</file>
-        <file>../qml/components/CoreUsageBar.qml</file>
-        <file>../qml/components/PartitionBar.qml</file>
-        <file>../qml/components/TabBar.qml</file>
-        <file>../qml/components/Button.qml</file>
-        <file>../qml/components/ToggleSwitch.qml</file>
-        <file>../qml/components/InputField.qml</file>
+        <file alias="qml/views/pages/Dashboard.qml">../qml/views/pages/Dashboard.qml</file>
+        <file alias="qml/views/pages/CpuDetail.qml">../qml/views/pages/CpuDetail.qml</file>
+        <file alias="qml/views/pages/MemoryDetail.qml">../qml/views/pages/MemoryDetail.qml</file>
+        <file alias="qml/views/pages/StorageDetail.qml">../qml/views/pages/StorageDetail.qml</file>
+        <file alias="qml/views/pages/NetworkDetail.qml">../qml/views/pages/NetworkDetail.qml</file>
+        <file alias="qml/views/pages/Settings.qml">../qml/views/pages/Settings.qml</file>
+        
+        <!-- Components -->
+        <file alias="qml/views/components/BottomNav.qml">../qml/views/components/BottomNav.qml</file>
+        <file alias="qml/views/components/TopBar.qml">../qml/views/components/TopBar.qml</file>
+        <file alias="qml/views/components/CardContainer.qml">../qml/views/components/CardContainer.qml</file>
+        <file alias="qml/views/components/CircularGauge.qml">../qml/views/components/CircularGauge.qml</file>
+        <file alias="qml/views/components/LineChart.qml">../qml/views/components/LineChart.qml</file>
+        <file alias="qml/views/components/ProgressBar.qml">../qml/views/components/ProgressBar.qml</file>
+        <file alias="qml/views/components/CoreUsageBar.qml">../qml/views/components/CoreUsageBar.qml</file>
+        <file alias="qml/views/components/PartitionBar.qml">../qml/views/components/PartitionBar.qml</file>
+        <file alias="qml/views/components/DetailHeader.qml">../qml/views/components/DetailHeader.qml</file>
+        <file alias="qml/views/components/TabBar.qml">../qml/views/components/TabBar.qml</file>
+        <file alias="qml/views/components/ToggleSwitch.qml">../qml/views/components/ToggleSwitch.qml</file>
+        <file alias="qml/views/components/InputField.qml">../qml/views/components/InputField.qml</file>
+        <file alias="qml/views/components/Button.qml">../qml/views/components/Button.qml</file>
     </qresource>
 </RCC>

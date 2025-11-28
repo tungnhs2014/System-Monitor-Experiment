@@ -16,8 +16,8 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
-import "pages"
-import "components"
+import "views/pages"
+import "views/components"
 
 Window {
     id: root

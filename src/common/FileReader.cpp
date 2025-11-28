@@ -106,7 +106,7 @@ QString FileReader::executeCommand(const QString &command)
     process.start("sh", QStringList() << "-c" << command);
     process.waitForFinished(3000); // 3 scecond timeout
 
-    return QString::fromUtf8(process.readAllStandardOutput()).trimmed());
+    return QString::fromUtf8(process.readAllStandardOutput()).trimmed();
 }
 
 bool FileReader::fileExists(const QString &path)
@@ -115,7 +115,7 @@ bool FileReader::fileExists(const QString &path)
     return fileInfo.exists() && fileInfo.isReadable();
 }
 
-QStringList FileReader::getNetWorkInterface()
+QStringList FileReader::getNetworkInterfaces()
 {
     QStringList interfaces;
     QDir netDir("/sys/class/net");
@@ -136,7 +136,7 @@ QStringList FileReader::getNetWorkInterface()
 QString FileReader::getPrimaryInterface()
 {
     // Priority: eth0 > wlan0 > any other
-    QStringList interfaces = getNetWorkInterface();
+    QStringList interfaces = getNetworkInterfaces();
 
     // Check for enthernet first
     for (const QString& iface: interfaces) {

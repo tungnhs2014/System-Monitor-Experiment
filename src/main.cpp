@@ -1,121 +1,142 @@
-/**
+/*
  * ============================================
  * File: main.cpp
- * Description: Application entry point
+ * Description: Main entry point - can load different QML files
  * ============================================
  */
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickWindow>
 #include <QQmlContext>
-#include <QtDebug>
-#include <QFont>
-#include <QDir>
-#include <QFile>
-
-#include "SystemInfo.h"
-
-#ifdef PLATFORM_RASPBERRY_PI
-/**
- * Auto-detect XPT2046 touch input device by checking device name in sysfs
- * This is the professional and accurate method to find the correct input device
- */
-QString findTouchDevice() {
-    // Search through all input event devices
-    for (int i = 0; i < 10; i++) {
-        QString eventNum = QString::number(i);
-        QString sysPath = QString("/sys/class/input/event%1/device/name").arg(i);
-
-        QFile nameFile(sysPath);
-        if (nameFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QString deviceName = QString::fromUtf8(nameFile.readAll()).trimmed();
-            nameFile.close();
-
-            qDebug() << "event" << i << ":" << deviceName;
-
-            // Check if this is our XPT2046 touchscreen
-            if (deviceName.contains("XPT2046", Qt::CaseInsensitive) ||
-                deviceName.contains("ADS7846", Qt::CaseInsensitive) ||
-                deviceName.contains("Touchscreen", Qt::CaseInsensitive)) {
-
-                QString devicePath = QString("/dev/input/event%1").arg(i);
-                qInfo() << "✓ Touch device found:" << devicePath << "-" << deviceName;
-                return devicePath;
-            }
-        }
-    }
-
-    // Fallback: if not found, use event0 (first input device)
-    qWarning() << "⚠ XPT2046 touch device not found, using fallback: /dev/input/event0";
-    qWarning() << "→ Check if ili9341-touch kernel module is loaded: lsmod | grep ili9341_touch";
-    return "/dev/input/event0";
-}
-#endif
+#include <QScreen>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
+    // Set attributes before QGuiApplication
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     
     QGuiApplication app(argc, argv);
-
-    // Application info
+    
+    // Application metadata
     app.setOrganizationName("ILI9341");
-    app.setOrganizationDomain("ili9341_system");
+    app.setOrganizationDomain("ili9341.local");
     app.setApplicationName("System Monitor");
-    app.setApplicationVersion("1.0.0");
-
-#ifdef PLATFORM_RASPBERRY_PI
-    qputenv("QT_QPA_PLATFORM", "linuxfb:fb=/dev/fb1:size=320x240:mmSize=60x45:offset=0x0");
     
-    QString touchDevice = findTouchDevice();
+    // ==================== QML ENGINE ====================
     
-    QByteArray touchParams = QString("%1:rotate=0:invertx=0:inverty=0")
-                            .arg(touchDevice).toUtf8();
-    qputenv("QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS", touchParams);
-    
-    // Force evdevtouch plugin
-    qputenv("QT_QPA_GENERIC_PLUGINS", QString("evdevtouch:%1").arg(touchDevice).toUtf8());
-
-    qDebug() << "Running on Raspberry Pi - RGB565 mode";
-    qDebug() << "Touch device configured:" << touchDevice;
-#else
-    qDebug() << "Running on Desktop";
-#endif
-
-    QFont appFont;
-    appFont.setFamily("DejaVu Sans");  // Guaranteed in Yocto
-    appFont.setHintingPreference(QFont::PreferFullHinting);
-    app.setFont(appFont);
-
-    // Create QML engine
     QQmlApplicationEngine engine;
 
-    // Create SystemInfo instance
-    SystemInfo *systemInfo = new SystemInfo(&app);
-
-    // Register SystemInfo
-    engine.rootContext()->setContextProperty("systemInfo", systemInfo);
-    qmlRegisterType<SystemInfo>("com.ili9341.system", 1, 0, "SystemInfo");
-
-    // Load main QML
-    const QUrl url(QStringLiteral("qrc:/qml/Main.qml"));
-
+    
+    // ==================== DETERMINE WHICH QML TO LOAD ====================
+    
+    // OPTION 1: Use command-line argument
+    // Run: ./ili9341-system memory
+    //      ./ili9341-system cpu
+    //      ./ili9341-system storage
+    
+    QString qmlFile = "qrc:/qml/Main.qml";  // Default
+    
+    if (argc > 1) {
+        QString arg = QString(argv[1]).toLower();
+        
+        if (arg == "memory") {
+            qmlFile = "qrc:/qml/Main_MemoryDetail.qml";
+            qDebug() << "Loading Memory Detail page...";
+        }
+        else if (arg == "cpu") {
+            qmlFile = "qrc:/qml/Main_CpuDetail.qml";
+            qDebug() << "Loading CPU Detail page...";
+        }
+        else if (arg == "storage") {
+            qmlFile = "qrc:/qml/Main_StorageDetail.qml";
+            qDebug() << "Loading Storage Detail page...";
+        }
+        else if (arg == "dashboard") {
+            qmlFile = "qrc:/qml/Main_Dashboard.qml";
+            qDebug() << "Loading Dashboard page...";
+        }
+        else {
+            qDebug() << "Unknown argument:" << arg;
+            qDebug() << "Usage: ./ili9341-system [memory|cpu|storage|dashboard]";
+        }
+    }
+    
+    // OPTION 2: Hardcode for testing (comment out the above, use this)
+    /*
+    // Uncomment ONE of these:
+    // qmlFile = "qrc:/qml/Main_MemoryDetail.qml";
+    // qmlFile = "qrc:/qml/Main_CpuDetail.qml";
+    // qmlFile = "qrc:/qml/Main_StorageDetail.qml";
+    // qmlFile = "qrc:/qml/Main_Dashboard.qml";
+    */
+    
+    // ==================== LOAD QML ====================
+    
+    qDebug() << "Loading QML file:" << qmlFile;
+    
+    const QUrl url(qmlFile);
+    
+    // Error handling
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
         if (!obj && url == objUrl) {
-            qCritical() << "Failed to load QML";
+            qCritical() << "Failed to load QML file:" << url;
             QCoreApplication::exit(-1);
+        } else {
+            qDebug() << "QML loaded successfully!";
         }
     }, Qt::QueuedConnection);
-
+    
     engine.load(url);
-
-    if (engine.rootObjects().isEmpty()) {
-        qCritical() << "No root objects loaded";
-        return -1;
+    
+    // ==================== SCREEN INFO (Debug) ====================
+    
+    QScreen *screen = app.primaryScreen();
+    if (screen) {
+        QRect screenGeometry = screen->geometry();
+        qDebug() << "Screen geometry:" << screenGeometry;
+        qDebug() << "Screen size:" << screenGeometry.width() << "x" << screenGeometry.height();
+        qDebug() << "Physical DPI:" << screen->physicalDotsPerInch();
     }
-
-    qDebug() << "Application started successfully - RGB mode enabled";
+    
+    // ==================== START EVENT LOOP ====================
     
     return app.exec();
 }
+
+/*
+ * ============================================
+ * HƯỚNG DẪN SỬ DỤNG:
+ * ============================================
+ *
+ * CÁCH 1: Command-line argument (Linh hoạt nhất)
+ * ------------------------------------------------
+ * Không cần sửa code, chỉ chạy với tham số:
+ *
+ * ./ili9341-system               # Chạy Main.qml (default)
+ * ./ili9341-system memory        # Chạy Memory Detail
+ * ./ili9341-system cpu           # Chạy CPU Detail
+ * ./ili9341-system storage       # Chạy Storage Detail
+ * ./ili9341-system dashboard     # Chạy Dashboard
+ *
+ * CÁCH 2: Hardcode (Nhanh cho testing)
+ * -------------------------------------
+ * Comment out phần "OPTION 1", uncomment "OPTION 2":
+ *
+ * qmlFile = "qrc:/qml/Main_MemoryDetail.qml";
+ *
+ * Sau đó recompile:
+ * cd build && make && ./ili9341-system
+ *
+ * ============================================
+ * LƯU Ý:
+ * ============================================
+ *
+ * 1. Các file Main_*.qml phải có trong qml.qrc
+ * 2. Sau khi sửa qml.qrc, phải rebuild:
+ *    cd build && cmake .. && make
+ * 3. Command-line argument chỉ work nếu code OPTION 1 active
+ *
+ * ============================================
+ */

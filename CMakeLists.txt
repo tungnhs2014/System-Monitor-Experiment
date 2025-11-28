@@ -17,16 +17,16 @@ project(ili9341-system
 # ============================================================================
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ============================================================================
 # Qt Configuration
 # ============================================================================
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-# Find Qt6 package
+# Find Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS
     Core
     Gui
@@ -37,11 +37,13 @@ find_package(Qt6 REQUIRED COMPONENTS
 # ============================================================================
 # Platform Detection
 # ============================================================================
-message(STATUS "Platfrom Dectection")
+message(STATUS "========================================")
+message(STATUS "Platform Detection")
+message(STATUS "========================================")
 message(STATUS "System: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|armv71).*")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|armv7l).*")
     set(PLATFORM_RASPBERRY_PI TRUE)
     set(PLATFORM_NAME "Raspberry Pi")
 else()
@@ -57,32 +59,32 @@ message(STATUS "Target Platform: ${PLATFORM_NAME}")
 
 # --- MODEL Layer ---
 set(MODEL_SOURCES
-    src/model/CpuMonitor.cpp
-    src/model/GpuMonitor.cpp
-    src/model/MemoryMonitor.cpp
-    src/model/StorageMonitor.cpp
-    src/model/NetworkMonitor.cpp
-    src/model/SettingsManager.cpp
+    #src/model/CpuMonitor.cpp
+    # src/model/GpuMonitor.cpp
+    # src/model/MemoryMonitor.cpp
+    # src/model/StorageMonitor.cpp
+    # src/model/NetworkMonitor.cpp
+    # src/model/SettingsManager.cpp
 )
 
 set(MODEL_HEADERS
-    src/model/CpuMonitor.h
-    src/model/GpuMonitor.h
-    src/model/MemoryMonitor.h
-    src/model/StorageMonitor.h
-    src/model/NetworkMonitor.h
-    src/model/SettingsManager.h
+    # src/model/CpuMonitor.h
+    # src/model/GpuMonitor.h
+    # src/model/MemoryMonitor.h
+    # src/model/StorageMonitor.h
+    # src/model/NetworkMonitor.h
+    # src/model/SettingsManager.h
 )
 
 # --- CONTROLLER Layer  ---
 set(CONTROLLER_SOURCES
-    src/controller/SystemController.cpp
-    src/controller/NavigationController.cpp
+    # src/controller/SystemController.cpp
+    # src/controller/NavigationController.cpp
 )
 
 set(CONTROLLER_HEADERS
-    src/controller/SystemController.h
-    src/controller/NavigationController.h
+    # src/controller/SystemController.h
+    # src/controller/NavigationController.h
 )
 
 # --- COMMON Layer ---
@@ -97,7 +99,7 @@ set(COMMON_HEADERS
     src/common/Constants.h
 )
 
-# --- Application  ---
+# --- Application Entry ---
 set(APP_SOURCES
     src/main.cpp
 )
@@ -129,7 +131,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/model
         ${CMAKE_CURRENT_SOURCE_DIR}/src/controller
-        ${CMAKE_CURRENT_SOURCE_DIR}/scr/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 

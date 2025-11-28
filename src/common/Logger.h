@@ -102,7 +102,7 @@ public:
     void setLogFilePath(const QString& path);
 
 signals:
-    void logChanged();
+    void logsChanged();
     void maxLogEntriesChanged();
     void newLogEntry(const QString& entry);
 
