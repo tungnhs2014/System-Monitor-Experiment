@@ -1,16 +1,27 @@
-# ============================================
-# File: CMakeLists.txt
-# Description: Build configuration for desktop and Pi
-# ============================================
+# ============================================================================
+# ILI9341 System Monitor
+# ============================================================================
+# Project: System Monitor for Raspberry Pi
+# Version: 4.0.0
+# ============================================================================
 
 cmake_minimum_required(VERSION 3.16)
-project(ili9341-system VERSION 3.1.0 LANGUAGES CXX)
+project(ili9341-system 
+    VERSION 4.0.0
+    DESCRIPTION "System Monitor with ILI9341 Display"
+    LANGUAGES CXX
+)
 
+# ============================================================================
+# C++ Standard Configuration
+# ============================================================================
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Auto MOC, UIC, RCC
+# ============================================================================
+# Qt Configuration
+# ============================================================================
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -20,115 +31,177 @@ find_package(Qt6 REQUIRED COMPONENTS
     Core
     Gui
     Quick
+    Qml
 ) 
 
-# ==================== PLATFORM DETECTION ====================
-
-message(STATUS "Detecting platform.CMAKE_SYSTEM_PROCESSOR..")
+# ============================================================================
+# Platform Detection
+# ============================================================================
+message(STATUS "Platfrom Dectection")
 message(STATUS "System: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|armv71).*")
     set(PLATFORM_RASPBERRY_PI TRUE)
-    message(STATUS "Detected: Raspberry Pi (ARM processor)")
+    set(PLATFORM_NAME "Raspberry Pi")
 else()
     set(PLATFORM_RASPBERRY_PI FALSE)
-    message(STATUS "Detected: Desktop/Ubuntu (x86/64 processor)")
+    set(PLATFORM_NAME "Desktop")
 endif()
 
-# ==================== SOURCE FILES ====================
+message(STATUS "Target Platform: ${PLATFORM_NAME}")
 
-set(SOURCES
-    main.cpp
-    src/SystemInfo.cpp
-    src/SettingsManager.cpp
-    src/monitors/CpuMonitor.cpp
-    src/monitors/GpuMonitor.cpp
-    src/monitors/MemoryMonitor.cpp
-    src/monitors/StorageMonitor.cpp
-    src/monitors/NetworkMonitor.cpp
-    src/utils/FileReader.cpp
+# ============================================================================
+# Source Files
+# ============================================================================
+
+# --- MODEL Layer ---
+set(MODEL_SOURCES
+    src/model/CpuMonitor.cpp
+    src/model/GpuMonitor.cpp
+    src/model/MemoryMonitor.cpp
+    src/model/StorageMonitor.cpp
+    src/model/NetworkMonitor.cpp
+    src/model/SettingsManager.cpp
 )
 
-# Header files
-set(HEADERS
-    src/SystemInfo.h
-    src/SettingsManager.h
-    src/monitors/CpuMonitor.h
-    src/monitors/GpuMonitor.h
-    src/monitors/MemoryMonitor.h
-    src/monitors/StorageMonitor.h
-    src/monitors/NetworkMonitor.h
-    src/utils/FileReader.h
+set(MODEL_HEADERS
+    src/model/CpuMonitor.h
+    src/model/GpuMonitor.h
+    src/model/MemoryMonitor.h
+    src/model/StorageMonitor.h
+    src/model/NetworkMonitor.h
+    src/model/SettingsManager.h
 )
 
-# Qt resources
+# --- CONTROLLER Layer  ---
+set(CONTROLLER_SOURCES
+    src/controller/SystemController.cpp
+    src/controller/NavigationController.cpp
+)
+
+set(CONTROLLER_HEADERS
+    src/controller/SystemController.h
+    src/controller/NavigationController.h
+)
+
+# --- COMMON Layer ---
+set(COMMON_SOURCES
+    src/common/FileReader.cpp
+    src/common/Logger.cpp
+)
+
+set(COMMON_HEADERS
+    src/common/FileReader.h
+    src/common/Logger.h
+    src/common/Constants.h
+)
+
+# --- Application  ---
+set(APP_SOURCES
+    src/main.cpp
+)
+
+# --- Resources ---
 set(RESOURCES
     resources/qml.qrc
 )
 
-# ==================== CREATE EXECUTABLE ====================
-
+# ============================================================================
+# Create Executable
+# ============================================================================
 add_executable(${PROJECT_NAME}
-    ${SOURCES}
-    ${HEADERS}
+    ${APP_SOURCES}
+    ${MODEL_SOURCES}
+    ${MODEL_HEADERS}
+    ${CONTROLLER_SOURCES}
+    ${CONTROLLER_HEADERS}
+    ${COMMON_SOURCES}
+    ${COMMON_HEADERS}
     ${RESOURCES}
 )
 
-# ==================== LINK LIBRARIES ====================
+# ============================================================================
+# Include Directories
+# ============================================================================
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/model
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/controller
+        ${CMAKE_CURRENT_SOURCE_DIR}/scr/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib
+)
 
-# Link Qt libraries
+# ============================================================================
+# Link Libraries
+# ============================================================================
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Quick
+        Qt6::Qml
 
 )
 
-# ==================== INCLUDE DIRECTORIES ===================
-
-target_include_directories(${PROJECT_NAME}
+# ============================================================================
+# Compile Definitions
+# ============================================================================
+target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/monitors
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+        QT_DEPRECATED_WARNINGS
+        $<$<CONFIG:Debug>:QT_QML_DEBUG>
 )
-
-# ==================== COMPILER DEFINITIONS ====================
 
 if(PLATFORM_RASPBERRY_PI)
     target_compile_definitions(${PROJECT_NAME}
         PRIVATE
             PLATFORM_RASPBERRY_PI=1
     )
-    message(STATUS "Compile flag: PLATFORM_RASPBERRY_PI=1")
 else()
     target_compile_definitions(${PROJECT_NAME}
         PRIVATE
             PLATFORM_DESKTOP=1
     )
-    message(STATUS "Compile flag: PLATFORM_DESKTOP=1")
 endif()
 
-# ==================== INSTALL TARGET ====================
-
-install(TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION bin
+# ============================================================================
+# Compiler Options
+# ============================================================================
+target_compile_options(${PROJECT_NAME}
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        $<$<CONFIG:Release>:-O2>
+        $<$<CONFIG:Debug>:-g>
 )
 
-# ==================== BUILD SUMMARY ====================
-message(STATUS "==========================================")
-message(STATUS "Project: ${PROJECT_NAME} v${PROJECT_VERSION}")
-message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "Target: ${PLATFORM_RASPBERRY_PI}")
+# ============================================================================
+# Installation
+# ============================================================================
+include(GNUInstallDirs)
 
-if(PLATFORM_RASPBERRY_PI)
-    message(STATUS "Build for: Raspberry Pi")
-else()
-    message(STATUS "Build for: Desktop/Ubuntu")
-endif()
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
+# Install QML files for deployment
+install(DIRECTORY qml/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/qml
+)
+
+# ============================================================================
+# Build Summary
+# ============================================================================
+message(STATUS "========================================")
+message(STATUS "Build Configuration Summary")
+message(STATUS "========================================")
+message(STATUS "Project: ${PROJECT_NAME}")
+message(STATUS "Version: ${PROJECT_VERSION}")
+message(STATUS "Platform: ${PLATFORM_NAME}")
 message(STATUS "Qt Version: ${Qt6_VERSION}")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "C++ Standard: C++${CMAKE_CXX_STANDARD}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "========================================")
