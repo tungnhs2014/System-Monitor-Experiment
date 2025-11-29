@@ -24,6 +24,16 @@ namespace Info {
 }
 
 // ============================================================================
+// Update Intervals (milliseconds)
+// ============================================================================
+namespace Interval {
+    constexpr int FAST = 500;       // CPU, RAM real-time
+    constexpr int NORMAL = 1000;    // Default update
+    constexpr int SLOW = 2000;      // Network, Storage
+    constexpr int VERY_SLOW = 5000; // System info 
+}
+
+// ============================================================================
 // System Paths (Linux)
 // ============================================================================
 
@@ -35,6 +45,38 @@ namespace Path {
 
     // Memory
     constexpr const char* PROC_MEMINFO = "/proc/meminfo";
+
+    // Network
+    constexpr const char* PROC_NET_DEV = "/proc/net/dev";
+    constexpr const char* PROC_NET_TCP = "/proc/net/tcp";
+    constexpr const char* PROC_NET_TCP6 = "/proc/net/tcp6";
+
+    // System
+    constexpr const char* PROC_UPTIME = "/proc/uptime";
+    constexpr const char* PROC_VERSION = "/proc/version";
+    constexpr const char* ETC_HOSTNAME = "/etc/hostname";
+    constexpr const char* ETC_OS_RELEASE = "/etc/os-release";
+}   
+
+// ============================================================================
+// Default Thresholds
+// ============================================================================
+namespace Threshold {
+    // CPU
+    constexpr int CPU_WARNING = 70;
+    constexpr int CPU_CRITICAL = 90;
+    
+    // RAM
+    constexpr int RAM_WARNING = 75;
+    constexpr int RAM_CRITICAL = 90;
+    
+    // Temperature (Celsius)
+    constexpr int TEMP_WARNING = 60;
+    constexpr int TEMP_CRITICAL = 80;
+    
+    // Storage
+    constexpr int STORAGE_WARNING = 80;
+    constexpr int STORAGE_CRITICAL = 95;
 }
 
 }

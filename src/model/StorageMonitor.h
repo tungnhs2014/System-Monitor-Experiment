@@ -1,7 +1,7 @@
 /**
  * ============================================
- * File: src/monitors/StorageMonitor.h
- * Description: Storage monitoring - disk, swap, I/O statistics
+ * File: src/model/StorageMonitor.h
+ * Description: Storage/Disk monitoring and I/O statistics
  * ============================================
  */
 
@@ -13,105 +13,142 @@
 #include <QVector>
 #include <QVariantList>
 
+/**
+ * @class StorageMonitor
+ * @brief Monitors disk usage, swap, and I/O statistics
+ * 
+ * Reads data from:
+ * - statvfs() for disk usage
+ * - /proc/meminfo for swap
+ * - /sys/block/device/stat for I/O statistics
+ */
 class StorageMonitor : public QObject 
 {
     Q_OBJECT
 
 public:
-    explicit StorageMonitor(QObject *parent = nullptr);
+    /**
+     * @brief I/O statistics structure
+     */
+    struct IoStats {
+        unsigned long long sectorsRead = 0;
+        unsigned long long sectorsWritten = 0;
+    };
 
-    // Parse storage usage percentage
+    explicit StorageMonitor(QObject *parent = nullptr);
+    ~StorageMonitor() override = default;
+
+    // === Disk Usage ===
+    
+    /**
+     * @brief Parse root partition usage percentage
+     * @return Usage percentage (0-100)
+     */
     int parseUsage();
 
-    // Parse storage temperature
-    int parseTemp();
-
-    // Get/Set mount point to monitor (default: /)
+    /**
+     * @brief Get mount point being monitored
+     */
     QString getMountPoint() const;
+
+    /**
+     * @brief Set mount point to monitor
+     */
     void setMountPoint(const QString &path);
 
-    // ==================== ROOT PARTITION ====================
-
-    // Update roort partition statistics (call before get methods)
+     /**
+     * @brief Update root partition statistics
+     */
     void updateRootPartition();
 
-    // Get root partition details
+    // Root partition getters
     QString getRootTotal() const { return m_rootTotal;}
     QString getRootUsed() const { return m_rootUsed;}
     QString getRootFree() const { return m_rootFree;}
 
-    // ==================== SWAP ====================
+    // === Swap ===
 
-    // Update swap statistics
+    /**
+     * @brief Update swap statistics
+     */
     void updateSwap();
 
-    // Get swap details
+    // Swap getters
     int getSwapUsage() const { return m_swapUsage; }
     QString getSwapTotal() const { return m_swapTotal; }
     QString getSwapUsed() const { return m_swapUsed; }
     QString getSwapFree() const { return m_swapFree; }
 
-    // ==================== I/O ====================
+    // === I/O Statistics ===
     
-    // Update I/O statistics
+    /**
+     * @brief Update I/O statistics
+     */
     void updateIoStats();
 
-    // Get current I/O rates
+    // I/O getters
     QString getIoRead() const {return m_ioRead; }
     QString getIoWrite() const {return m_ioWrite; }
 
-    // Get I/O history (last 30 values)
+    /**
+     * @brief Get I/O history for charting
+     */
     QVariantList getIoHistory() const;
 
+    // === Temperature ===
+
+    /**
+     * @brief Parse storage temperature (if available)
+     * @return Temperature in Celsius, 0 if not available
+     */
+    int parseTemp();
+
 private:
-    // ==================== STRUCTURES ====================
+    /**
+     * @brief Format bytes to human-readable string
+     */
+    QString formatSize(unsigned long long bytes);
 
-    // I/O statistics from /sys/block/mmcblk0/stat
-    struct IoStats {
-        unsigned long long sectorsRead;
-        unsigned long long sectorsWritten;
+    /**
+     * @brief Read I/O statistics from /sys/block
+     */
+    IoStats readIoStats();
 
-        IoStats() : sectorsRead(0), sectorsWritten(0) {}
-    };
+    /**
+     * @brief Calculate I/O rate from sector delta
+     */
+    double calculateIoRate(unsigned long long deltaSectors);
 
+    /**
+     * @brief Find the primary block device
+     */
+    QString findBlockDevice();
+
+private:
+    // Mount point to monitor
     QString m_mountPoint;
 
-    // ==================== ROOT PARTITION ====================
-
+    // Root partition stats
     QString m_rootTotal;
     QString m_rootUsed;
     QString m_rootFree;
 
-    // ==================== SWAP ====================
-
+    // Swap stats
     int m_swapUsage;
     QString m_swapTotal;
     QString m_swapUsed;
     QString m_swapFree;
 
-    // ==================== I/O ====================
-
-    // Previous I/O stats for delta calculation
+    // I/O stats
     IoStats m_prevIoStats;
-
-    // Current I/O rates
     QString m_ioRead;
     QString m_ioWrite;
-
-    // I/O history buffer (circular, max 30 values = 60 seconds at 2s interval)
     QVector<int> m_ioHistory;
-    static const int MAX_IO_HISTORY = 30;
+    QString m_blockDevice;
 
-    // ==================== HELPER METHODS ====================
-    
-    // Format size in bytes to human-readable string (KB, MB, GB)
-    QString formatSize(unsigned long long bytes);
-
-    // Read I/O stats from /sys/block/mmcblk0/stat
-    IoStats readIoStats();
-
-    // Calculate I/O rate in MB/s from delta
-    double calculateIoRate(unsigned long long deltasetors);
+    // Constants
+    static constexpr int MAX_IO_HISTORY = 60;
+    static constexpr int SECTOR_SIZE = 512;
 };
 
 #endif // STORAGEMONITOR_H

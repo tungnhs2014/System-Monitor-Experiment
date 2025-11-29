@@ -1,8 +1,8 @@
 /**
  * ============================================
- * File: src/SettingsManager.h
- * Description: Settings management, system info, logs
- * ============================================
+ * File: src/model/SettingsManager.h
+ * Description: Application settings and system information management
+ * ============================================================================
  */
 
 #ifndef SETTINGSMANAGER_H
@@ -11,132 +11,119 @@
 #include <QObject>
 #include <QString>
 #include <QVariantList>
-#include <QVariantMap>
 #include <QSettings>
 
-class SettingsManager : public QObject 
+/**
+ * @class SettingsManager
+ * @brief Manages application settings, system info, and logging
+ * 
+ * Responsibilities:
+ * - Save/load user settings
+ * - System information (hostname, kernel, OS)
+ * - Warning thresholds
+ * - System logs
+ * - Reboot/shutdown commands
+ */
+class SettingsManager : public QObject
 {
     Q_OBJECT
 
+    // Settings properties
+    Q_PROPERTY(int updateInterval READ updateInterval WRITE setUpdateInterval NOTIFY settingsChanged)
+    Q_PROPERTY(bool darkMode READ darkMode WRITE setDarkMode NOTIFY settingsChanged)
+    Q_PROPERTY(bool soundAlert READ soundAlert WRITE setSoundAlert NOTIFY settingsChanged)
+
+    // Warning thresholds
+    Q_PROPERTY(int cpuWarnThreshold READ cpuWarnThreshold WRITE setCpuWarnThreshold NOTIFY settingsChanged)
+    Q_PROPERTY(int cpuCritThreshold READ cpuCritThreshold WRITE setCpuCritThreshold NOTIFY settingsChanged)
+    Q_PROPERTY(int ramWarnThreshold READ ramWarnThreshold WRITE setRamWarnThreshold NOTIFY settingsChanged)
+    
+    // System info (read-only)
+    Q_PROPERTY(QString hostname READ hostname CONSTANT)
+    Q_PROPERTY(QString osVersion READ osVersion CONSTANT)
+    Q_PROPERTY(QString kernelVersion READ kernelVersion CONSTANT)
+    Q_PROPERTY(QString uptime READ uptime NOTIFY uptimeChanged)
+    Q_PROPERTY(QString systemTime READ systemTime NOTIFY systemTimeChanged)
+    
+    // Logs
+    Q_PROPERTY(QVariantList systemLogs READ systemLogs NOTIFY logsChanged)
+
+
 public: 
     explicit SettingsManager(QObject * parent = nullptr);
+    ~SettingsManager() override = default;
 
-    // ==================== SYSTEM INFORMATION ====================
+    // === Settings Getters ===
+    int updateInterval() const { return m_updateInterval; }
+    bool darkMode() const { return m_darkMode; }
+    bool soundAlert() const { return m_soundAlert; }
+    
+    // === Threshold Getters ===
+    int cpuWarnThreshold() const { return m_cpuWarnThreshold; }
+    int cpuCritThreshold() const { return m_cpuCritThreshold; }
+    int ramWarnThreshold() const { return m_ramWarnThreshold; }
 
-    // Get system hostname
-    QString getHostname() const { return m_hostname; }
+    // === System Info Getters ===
+    QString hostname() const { return m_hostname; }
+    QString osVersion() const { return m_osVersion; }
+    QString kernelVersion() const { return m_kernelVersion; }
+    QString uptime() const;
+    QString systemTime() const;
 
-    // Get OS version (from /etc/os-release)
-    QString getOsVersion() const { return m_osVersion; }
+    // === Logs ===
+    QVariantList systemLogs() const { return m_systemLogs; }
 
-    // Get kernel version
-    QString getKernelVersion() const { return m_kernelVersion; }
-
-    // Get system uptime (formatted)
-    QString getupTime() const;
-
-    // Get current system time (formatted)
-    QString getSystemTime() const;
-
-    // ==================== USER SETTINGS ====================
-
-    // Update interval (seconds)
-    int getUpdateInterval() const { return m_updateInterval; }
+    // === Settings Setters ===
     void setUpdateInterval(int interval);
-
-    // Dark mode
-    bool getDarkMode() const { return m_darkMode; }
     void setDarkMode(bool enabled);
-
-    // Sound alert
-    bool getSoundAlert() const { return m_soundAlert; }
     void setSoundAlert(bool enabled);
-
-    // ==================== WARNING THRESHOLDS ====================
-
-    // CPU warning threshold (%)
-    int getCpuWarnThreshold() const { return m_cpuWarnThreshold; }
     void setCpuWarnThreshold(int threshold);
-    
-    // CPU critical threshold (%)
-    int getCpuCritThreshold() const { return m_cpuCritThreshold; }
     void setCpuCritThreshold(int threshold);
-    
-    // RAM warning threshold (%)
-    int getRamWarnThreshold() const { return m_ramWarnThreshold; }
     void setRamWarnThreshold(int threshold);
 
-    // ==================== SYSTEM LOGS ====================
-    
-    // Get system logs list
-    QVariantList getSystemLogs() const { return m_systemLogs; }
-
-    // Add log entry
-    void addLog(const QString &level, const QString &message);
-
-    // ==================== PERSISTENCE ====================
-
-    // Save all settings to QSettings
-    void save();
-
-    // Load all settings from QSettings
-    void load();
-
-    // ==================== SYSTEM CONTROLS ====================
-    
-    // Reboot system
-    void reboot();
-
-    // Shutdown system
-    void shutdown();
+    // === Actions ===
+    Q_INVOKABLE void save();
+    Q_INVOKABLE void load();    
+    Q_INVOKABLE void reboot();
+    Q_INVOKABLE void shutdown();
+    Q_INVOKABLE void addLog(const QString& level, const QString& message);
+    Q_INVOKABLE void clearLogs();
 
 signals:
-    // Emitted when settings change
     void settingsChanged();
-    
-    // Emitted when logs change
     void logsChanged();
+    void uptimeChanged();
+    void systemTimeChanged();
 
 private:
-    // ==================== MEMBERS - SYSTEM INFO ====================
+    // Parsing helpers
+    QString parseHostname();
+    QString parseOsVersion();
+    QString parseKernelVersion();
+    QString parseUptime() const;
+    QString formatUptime(unsigned long long seconds) const;
 
-    QString m_hostname;
-    QString m_osVersion;
-    QString m_kernelVersion;
-
-    // ==================== MEMBERS - USER SETTINGS ====================
-
+private:
+    // Settings
     int m_updateInterval;
     bool m_darkMode;
     bool m_soundAlert;
 
-    // ==================== MEMBERS - WARNING THRESHOLDS ====================
+    // System info (cached)
+    QString m_hostname;
+    QString m_osVersion;
+    QString m_kernelVersion;
 
+    // Thresholds
     int m_cpuWarnThreshold;
     int m_cpuCritThreshold;
     int m_ramWarnThreshold;
-
-    // ==================== MEMBERS - LOGS ====================
-
+    
+    // Logs
     QVariantList m_systemLogs;
-    static const int MAX_LOGS = 100;
 
-    // ==================== HELPER METHODS ====================
-
-    // Parse hostname from system
-    QString parseHostname();
-
-    // Parse OS version from /etc/os-release
-    QString parseOsVersion();
-
-    // Parse kernel version
-    QString paresKerneVersion();
-
-    // Parse uptime from /proc/uptime
-    QString parseUptime() const;
-
-    // Format uptime seconds to "Xd Xh Xm Xs"
-    QString formatUptime(unsigned long long seconds) const;
+    // Constants
+    static constexpr int MAX_LOGS = 100;
 };
 
 #endif // SETTINGSMANAGER_H

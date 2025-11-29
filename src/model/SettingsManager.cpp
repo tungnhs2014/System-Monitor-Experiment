@@ -1,30 +1,31 @@
 /**
  * ============================================
- * File: src/SettingsManager.cpp
+ * File: src/model/SettingsManager.cpp
  * Description: Settings management implementation
  * ============================================
  */
 
 #include "SettingsManager.h"
 #include "FileReader.h"
-#include <QDebug>
+#include "Constants.h"
+#include "Logger.h"
 #include <QDateTime>
 #include <QProcess>
 #include <unistd.h>
 
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
-    , m_updateInterval(2)
+    , m_updateInterval(App::Interval::NORMAL / 1000) // Convert ms to seconds
     , m_darkMode(true)
     , m_soundAlert(false)
-    , m_cpuWarnThreshold(70)
-    , m_cpuCritThreshold(90)
-    , m_ramWarnThreshold(80)
+    , m_cpuWarnThreshold(App::Threshold::CPU_WARNING)
+    , m_cpuCritThreshold(App::Threshold::CPU_CRITICAL)
+    , m_ramWarnThreshold(App::Threshold::RAM_WARNING)
 {
     // Parse system information
     m_hostname = parseHostname();
     m_osVersion = parseOsVersion();
-    m_kernelVersion = paresKerneVersion();
+    m_kernelVersion = parseKernelVersion();
 
     // Load saved settings
     load();
@@ -32,15 +33,15 @@ SettingsManager::SettingsManager(QObject *parent)
     // Add initial log
     addLog("INFO", "System Monitor started");
 
-    qDebug() << "SettingManager initialized - hostname:" << m_hostname;
+    LOG_INFO(QString("SettingsManager initialized - hostname: %1").arg(m_hostname));
 }
 
-QString SettingsManager::getupTime() const
+QString SettingsManager::uptime() const
 {
     return parseUptime();
 }
 
-QString SettingsManager::getSystemTime() const
+QString SettingsManager::systemTime() const
 {
     return QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 }
@@ -109,17 +110,23 @@ void SettingsManager::addLog(const QString &level, const QString &message)
     // Add to front of list (most recent first)
     m_systemLogs.prepend(log);
     
-    // Keep only last MAX_LOGS entries
-    if (m_systemLogs.size() > MAX_LOGS) {
+    // Trim to max size
+    while (m_systemLogs.size() > MAX_LOGS) {
         m_systemLogs.removeLast();
     }
 
     emit logsChanged();
 }
 
+void SettingsManager::clearLogs()
+{
+    m_systemLogs.clear();
+    addLog("INFO", "Logs cleared");
+}
+
 void SettingsManager::save()
 {
-    QSettings settings("ILI9341", "SystemMonitor");
+    QSettings settings(App::Info::ORGANIZATION, App::Info::NAME);
 
     // Save user settings
     settings.setValue("updateInterval", m_updateInterval);
@@ -133,41 +140,43 @@ void SettingsManager::save()
 
     settings.sync();
 
-    addLog("INFO", "Setting saved sucessfully");
+    addLog("INFO", "Settings saved successfully");
 
-    qDebug() << "Settings saved to:" << settings.fileName();
+    LOG_INFO("Settings saved to: " + settings.fileName());
 }
 
 void SettingsManager::load()
 {
-    QSettings settings("ILI9341", "SystemMonitor");
+    QSettings settings(App::Info::ORGANIZATION, App::Info::NAME);
 
     // Load with default values;
     m_updateInterval = settings.value("updateInterval", 2).toInt();
     m_darkMode = settings.value("darkMode", true).toBool();
     m_soundAlert = settings.value("soundAlert", false).toBool();
 
-    m_cpuWarnThreshold = settings.value("cpuWarnThreshold", 70).toInt();
-    m_cpuCritThreshold = settings.value("cpuCritThreshold", 90).toInt();
-    m_ramWarnThreshold = settings.value("ramWarnThreshold", 80).toInt();
-
-    qDebug() << "Settings loaded from:" << settings.fileName();
+    m_cpuWarnThreshold = settings.value("cpuWarnThreshold", App::Threshold::CPU_WARNING).toInt();
+    m_cpuCritThreshold = settings.value("cpuCritThreshold", App::Threshold::CPU_CRITICAL).toInt();
+    m_ramWarnThreshold = settings.value("ramWarnThreshold", App::Threshold::RAM_WARNING).toInt();
+    
+    LOG_INFO("Settings loaded from: " + settings.fileName());
 }
 
 void SettingsManager::reboot()
 {
-    addLog("WARN", "System reboot initialized");
+    addLog("WARN", "System reboot initiated");
+    LOG_WARNING("System reboot initiated by user");
 
-    // Execute reboot command with sudo
-    QProcess::execute("sudo", QStringList() << "reboot");
+    // Execute reboot command directly
+    QProcess::startDetached("reboot", QStringList());
 }   
 
 void SettingsManager::shutdown()
 {
-    addLog("WARN", "System shutdown initialized");
+    addLog("WARN", "System shutdown initiated");
+    LOG_WARNING("System shutdown initiated by user");
 
-    // Execute shutdown command with sudo
-    QProcess::execute("sudo", QStringList() << "shshutdown" << "-h" <<"now");
+    // Execute shutdown command directly
+    QProcess::startDetached("shutdown", {"-h", "now"});
 }
 
 QString SettingsManager::parseHostname()
@@ -178,14 +187,18 @@ QString SettingsManager::parseHostname()
         return QString::fromUtf8(hostname);
     }
 
-    qWarning() << "Failed to get hostname";
+    // Fallback: read from file
+    QString hostnameFile = FileReader::readFirstLine(App::Path::ETC_HOSTNAME);
+    if (!hostnameFile.isEmpty()) {
+        return hostnameFile;
+    }
+
     return "unknown";
 }
 
 QString SettingsManager::parseOsVersion()
 {
-    // Read /etc/os-release
-    QString content = FileReader::readFile("/etc/os-release");
+    QString content = FileReader::readAll(App::Path::ETC_OS_RELEASE);
 
     if (content.isEmpty()) {
         return "Unknown OS";
@@ -193,7 +206,7 @@ QString SettingsManager::parseOsVersion()
 
     QStringList lines = content.split('\n', Qt::SkipEmptyParts);
 
-    // Look for PRETTY_NAME line
+    // Look for PRETTY_NAME first
     for (const QString &line : lines) {
         if (line.startsWith("PRETTY_NAME=")) {
             QString prettyName = line.mid(12); // Remove "PRETTY_NAME="
@@ -203,7 +216,7 @@ QString SettingsManager::parseOsVersion()
         }
     }
 
-     // Fallback: look for NAME and VERSION
+     // Fallback to NAME + VERSION
     QString name, version;
     
     for (const QString &line : lines) {
@@ -216,46 +229,36 @@ QString SettingsManager::parseOsVersion()
     }
     
     if (!name.isEmpty()) {
-        if (!version.isEmpty()) {
-            return name + " " + version;
-        }
-        return name;
+        return version.isEmpty() ? name : name + " " + version;
     }
     
     return "Linux";
 }
 
-QString SettingsManager::paresKerneVersion()
+QString SettingsManager::parseKernelVersion()
 {
     // Execute 'uname -r' to get kernel version
     QProcess process;
-    process.start("uname", QStringList() <<"-r");
+    process.start("uname", {"-r"});
 
     if (!process.waitForFinished(1000)) {
-        qWarning() << "Failed to get kernel version";
         return "Unknown";
     }
-
-    QString version = process.readAllStandardOutput().trimmed();
-
-    if (version.isEmpty()) {
-        return "Unknown";
-    }
-
-    return version;
+    
+    QString version = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+    return version.isEmpty() ? "Unknown" : version;
 }
 
 QString SettingsManager::parseUptime() const
 {
     // Read /proc/uptime
-    QString uptimeStr = FileReader::readFirstLine("/proc/uptimes");
+    QString uptimeStr = FileReader::readFirstLine(App::Path::PROC_UPTIME);
 
     if (uptimeStr.isEmpty()) {
         return "N/A";
     }
 
     // Format: "12345.67 12345.67"
-    // First number is total uptime in seconds
     QStringList parts = uptimeStr.split(' ', Qt::SkipEmptyParts);
 
     if (parts.isEmpty()) {
@@ -274,9 +277,9 @@ QString SettingsManager::parseUptime() const
 
 QString SettingsManager::formatUptime(unsigned long long seconds) const
 {
-    const unsigned long long MINUTE = 60;
-    const unsigned long long HOUR = MINUTE * 60;
-    const unsigned long long DAY = HOUR * 24;
+    constexpr unsigned long long MINUTE = 60;
+    constexpr unsigned long long HOUR = MINUTE * 60;
+    constexpr unsigned long long DAY = HOUR * 24;
 
     unsigned long long days = seconds / DAY;
     seconds %= DAY;

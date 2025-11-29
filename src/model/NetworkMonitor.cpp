@@ -1,13 +1,14 @@
 /**
  * ============================================
- * File: src/monitors/NetworkMonitor.cpp
+ * File: src/model/NetworkMonitor.cpp
  * Description: Network monitoring implementation
  * ============================================
  */
 
 #include "NetworkMonitor.h"
 #include "FileReader.h"
-#include <QDebug>
+#include "Constants.h"
+#include "Logger.h"
 #include <QFile>
 #include <QTextStream>
 #include <QProcess>
@@ -18,33 +19,24 @@ NetworkMonitor::NetworkMonitor(QObject *parent)
     , m_interface("")
     , m_ipAddress("N/A")
     , m_macAddress("N/A")
-    , m_upSpeed("0.0 Bps")
-    , m_downSpeed("0.0 Bps")
+    , m_upSpeed("0 B/s")
+    , m_downSpeed("0 B/s")
     , m_packetRate("0 pps")
     , m_activeConnections(0)
     , m_prevTimestamp(0)
 {
-
-    // Reserve space for history buffer
     m_upHistory.reserve(MAX_HISTORY);
     m_downHistory.reserve(MAX_HISTORY);
-
 
     // Detect active interface
     m_interface = detectInterface();
     
-    qDebug() << "NetworkMonitor initialized - interface:" << m_interface;
-    
-#ifdef PLATFORM_RASPBERRY_PI
-    qDebug() << "Platform: Raspberry Pi - Prefer eth0/wlan0";
-#else
-    qDebug() << "Platform: Desktop/Ubuntu - Prefer enp*/wlp*";
-#endif
+    LOG_INFO(QString("NetworkMonitor initialized - interface: %1").arg(m_interface));
 }
 
 void NetworkMonitor::update()
 {
-    // Update interface if nededed (in case it changed)
+     // Re-detect interface if needed
     if (m_interface.isEmpty()) {
         m_interface = detectInterface();
     }
@@ -61,8 +53,8 @@ void NetworkMonitor::update()
     if (m_prevTimestamp == 0) {
         m_prevStats = currentStats;
         m_prevTimestamp = currentTimestamp;
-        m_upSpeed = "0.0 Bps";
-        m_downSpeed = "0.0 Bps";
+        m_upSpeed = "0 B/s";
+        m_downSpeed = "0 B/s";
         m_packetRate = "0 pps";
         return;
     }
@@ -97,14 +89,14 @@ void NetworkMonitor::update()
     m_downHistory.append(downKBs);
     
     // Keep only last MAX_HISTORY values
-    if (m_upHistory.size() > MAX_HISTORY) {
+    while (m_upHistory.size() > MAX_HISTORY) {
         m_upHistory.removeFirst();
     }
-    if (m_downHistory.size() > MAX_HISTORY) {
+    while (m_downHistory.size() > MAX_HISTORY) {
         m_downHistory.removeFirst();
     }
     
-    // Update previous stats
+    // Update previous values
     m_prevStats = currentStats;
     m_prevTimestamp = currentTimestamp;
     
@@ -116,60 +108,45 @@ QString NetworkMonitor::detectInterface()
 {
     QStringList candidates;
 
-    // Platform-specific interface priority
 #ifdef PLATFORM_RASPBERRY_PI
     // Raspberry Pi: eth0 > wlan0
     candidates = {"eth0", "wlan0"};
 #else
-    // Desktop/Ubuntu: enp* > wlp* > eth0 > wlan0
-    candidates = {"enp0s3", "enp0s8", "enp3s0", "ens33", 
+    candidates = {"enp0s3", "enp0s8", "enp3s0", "ens33", "ens160",
                   "wlp2s0", "wlp3s0", "wlan0", "eth0"};
 #endif
 
     // Try priority list first
     for (const QString &iface: candidates) {
         QString macPath = QString("/sys/class/net/%1/address").arg(iface);
-        if (FileReader::fileExits(macPath)) {
+        if (FileReader::fileExists(macPath)) {
             // Check if interface has carrier (is up)
             QString carrierPath = QString("/sys/class/net/%1/carrier").arg(iface);
             QString carrier = FileReader::readFirstLine(carrierPath);
             
             if (carrier == "1") {
-                qDebug() << "Detected active interface:" << iface;
                 return iface;
             }
         }
     }
 
-    // Fallback: return first interface found in /proc/net/dev
-    QFile devFile("/proc/net/dev");
-    if (devFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&devFile);
-        QString line;
-        
-        // Skip first 2 header lines
-        in.readLine();
-        in.readLine();
-        
-        while (!in.atEnd()) {
-            line = in.readLine();
-            QStringList parts = line.split(':', Qt::SkipEmptyParts);
-            
-            if (parts.size() >= 2) {
-                QString iface = parts[0].trimmed();
-                
-                // Skip loopback
-                if (iface != "lo") {
-                    qDebug() << "Fallback interface:" << iface;
-                    return iface;
-                }
+    // Fallback: scan /proc/net/dev
+    QStringList lines = FileReader::readLines(App::Path::PROC_NET_DEV);
+
+    for (int i = 2; i < lines.size(); i++) { // Skip 2 header lines
+        QString line = lines[i];
+        int colonPos = line.indexOf(':');
+
+        if (colonPos > 0) {
+            QString iface = line.left(colonPos).trimmed();
+
+            if (iface != "lo") {
+                return iface;
             }
         }
-        
-        devFile.close();
     }
-    
-    qWarning() << "No network interface detected";
+
+    LOG_WARNING("No network interface detected");    
     
 #ifdef PLATFORM_RASPBERRY_PI
     return "eth0"; // Default fallback for Pi
@@ -186,14 +163,13 @@ QString NetworkMonitor::parseIpAddress(const QString &interface)
 
     // Use 'ip addr show' command
     QProcess process;
-    process.start("ip", QStringList() << "add" << "show" << interface);
+    process.start("ip", {"addr", "show", interface});
 
     if (!process.waitForFinished(1000)) {
-        qWarning() << "Failed to get IP address for" << interface;
         return "N/A";
     }
 
-    QString output = process.readAllStandardOutput();
+    QString output = QString::fromUtf8(process.readAllStandardOutput());
     QStringList lines = output.split('\n', Qt::SkipEmptyParts);
 
     // Look for line with "inet " (IPv4)
@@ -203,9 +179,8 @@ QString NetworkMonitor::parseIpAddress(const QString &interface)
             // Format: "inet 192.168.1.100/24..."
             QStringList parts = trimmed.split(' ', Qt::SkipEmptyParts);
             if (parts.size() >= 2) {
-                QString ipWidthMask = parts[1];
-                // Remove subnet mask
-                return ipWidthMask.split('/').first();
+                // Remove subnet mask (/24)
+                return parts[1].split('/').first();
             }
         }
     }
@@ -222,11 +197,7 @@ QString NetworkMonitor::parseMacAddress(const QString &interface)
     QString macPath = QString("/sys/class/net/%1/address").arg(interface);
     QString mac = FileReader::readFirstLine(macPath);
 
-    if (mac.isEmpty()) {
-        return "N/A";
-    }
-
-    return mac.trimmed();
+    return mac.isEmpty() ? "N/A" : mac.toUpper();
 }
 
 NetworkMonitor::NetStats NetworkMonitor::parseNetStats(const QString &interface)
@@ -237,53 +208,36 @@ NetworkMonitor::NetStats NetworkMonitor::parseNetStats(const QString &interface)
         return stats;
     }
     
-    QFile file("/proc/net/dev");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        static bool warned = false;
-        if (!warned) {
-            qWarning() << "Failed to open /proc/net/dev";
-            warned = true;
-        }
-        return stats;
-    }
-    
-    QTextStream in(&file);
-    QString line;
-    
-    while (!in.atEnd()) {
-        line = in.readLine();
-        
-        // Look for line containing the interface name
+    QStringList lines = FileReader::readLines(App::Path::PROC_NET_DEV);
+
+    for (const QString& line : lines) {
         if (line.contains(interface + ":")) {
-            // Format: "interface: rxBytes rxPackets ... txBytes txPackets ..."
-            QStringList parts = line.split(':', Qt::SkipEmptyParts);
-            
-            if (parts.size() >= 2) {
-                QStringList values = parts[1].split(' ', Qt::SkipEmptyParts);
-                
-                // Index 0: rxBytes
-                // Index 1: rxPackets
-                // Index 8: txBytes
-                // Index 9: txPackets
-                if (values.size() >= 10) {
-                    stats.rxBytes = values[0].toULongLong();
-                    stats.rxPackets = values[1].toULongLong();
-                    stats.txBytes = values[8].toULongLong();
-                    stats.txPackets = values[9].toULongLong();
+            int colonPos = line.indexOf(':');
+
+            if (colonPos > 0) {
+                QString values = line.mid(colonPos + 1);
+                QStringList parts = values.split(' ', Qt::SkipEmptyParts);
+
+                // Index: 0=rxBytes, 1=rxPackets, 8=txBytes, 9=txPackets
+                if (parts.size() >= 10) {
+                    stats.rxBytes = parts[0].toULongLong();
+                    stats.rxPackets = parts[1].toULongLong();
+                    stats.txBytes = parts[8].toULongLong();
+                    stats.txPackets = parts[9].toULongLong();
                 }
             }
-            
             break;
         }
     }
     
-    file.close();
     return stats;
 }
 
 QVariantList NetworkMonitor::getUpHistory() const
 {
     QVariantList result;
+    result.reserve(m_upHistory.size());
+
     for (int value : m_upHistory) {
         result.append(value);
     }
@@ -293,6 +247,8 @@ QVariantList NetworkMonitor::getUpHistory() const
 QVariantList NetworkMonitor::getDownHistory() const
 {
     QVariantList result;
+    result.reserve(m_downHistory.size());
+
     for (int value : m_downHistory) {
         result.append(value);
     }
@@ -301,51 +257,48 @@ QVariantList NetworkMonitor::getDownHistory() const
 
 int NetworkMonitor::parseActiveConnections()
 {
-    QFile file("/proc/net/tcp");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return 0;
-    }
-    
-    QTextStream in(&file);
     int count = 0;
-    
-    // Skip header line
-    in.readLine();
-    
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-        
-        // Format: "sl local_address rem_address st ..."
-        // State "01" = ESTABLISHED
-        QStringList parts = line.split(' ', Qt::SkipEmptyParts);
-        
-        if (parts.size() >= 4) {
-            QString state = parts[3];
-            if (state == "01") {
-                count++;
-            }
+
+    // Count IPv4 connections
+    QStringList tcpLines = FileReader::readLines(App::Path::PROC_NET_TCP);
+    for (int i = 1; i < tcpLines.size(); i++) { // Skip header
+        QStringList parts = tcpLines[i].split(' ', Qt::SkipEmptyParts);
+
+        if (parts.size() >= 4 && parts[3] == "01") { // ESTABLISHED
+            count++;
+        }
+    }
+
+    // Count IPv6 connections
+     QStringList tcp6Lines = FileReader::readLines(App::Path::PROC_NET_TCP6);
+    for (int i = 1; i < tcp6Lines.size(); i++) { 
+        QStringList parts = tcp6Lines[i].split(' ', Qt::SkipEmptyParts);
+
+        if (parts.size() >= 4 && parts[3] == "01") { 
+            count++;
         }
     }
     
-    file.close();
     return count;
 }
 
 QString NetworkMonitor::formatRate(double bytesPerSec)
 {
-    const double KB = 1024.0;
-    const double MB = KB * 1024.0;
+    constexpr double KB = 1024.0;
+    constexpr double MB = KB * 1024.0;
+    constexpr double GB = MB * 1024.0;
     
-    if (bytesPerSec >= MB) {
-        double mbps = bytesPerSec / MB;
-        return QString::number(mbps, 'f', 1) + " MB/s";
-    }
+    if (bytesPerSec >= GB) {
+        return QString::number(bytesPerSec / GB, 'f', 1) + " GB/s";
+    } 
+    else if (bytesPerSec >= MB) {
+        return QString::number(bytesPerSec / MB, 'f', 1) + " MB/s";
+    } 
     else if (bytesPerSec >= KB) {
-        double kbps = bytesPerSec / KB;
-        return QString::number(kbps, 'f', 1) + " KB/s";
-    }
+        return QString::number(bytesPerSec / KB, 'f', 1) + " KB/s";
+    } 
     else {
-        return QString::number(static_cast<int>(bytesPerSec)) + " Bps";
+        return QString::number(static_cast<int>(bytesPerSec)) + " B/s";
     }
 }
 
