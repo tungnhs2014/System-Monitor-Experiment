@@ -1,91 +1,69 @@
 /**
  * ============================================
- * File: src/monitors/GpuMonitor.cpp
- * Description: GPU monitoring with vcgencmd support
+ * File: src/model/GpuMonitor.cpp
+ * Description: GPU monitoring implementation
  * ============================================
  */
 
 #include "GpuMonitor.h"
 #include "FileReader.h"
+#include "Logger.h"
 #include <QProcess>
-#include <QDebug>
 
 GpuMonitor::GpuMonitor(QObject *parent)
     : QObject(parent)
     , m_vcgencmdAvailable(false)
 {
-    // Check if vcgencmd is available 
-    m_vcgencmdAvailable = isVcgencmdAvailable();
+    m_vcgencmdAvailable = checkVcgencmdAvailable();
 
     if (!m_vcgencmdAvailable) {
-        qWarning() << "vcgencmd not available - using fallback methods";
-    } else {
-        qInfo() << "vcgencmd detected - using real GPU metrics";
+        LOG_INFO("GpuMonitor: vcgencmd available - using real GPU metrics");
+    }
+    else {
+        LOG_INFO("GpuMonitor: vcgencmd not available - using fallback");
     }
 }
 
 int GpuMonitor::parseTemp()
 {
     if (m_vcgencmdAvailable) {
-        // Try to get GPU temp using vcgencmd
-        QProcess process;
-        process.start("vcgencmd", QStringList() << "measure_temp");
+        // Use vcgencmd for accurate GPU temperature
+        QString output = executeVcgencmnd({"measure_temp"});
 
-        if (process.waitForFinished(1000)) {
-            QString output = process.readAllStandardOutput().trimmed();
-            // Output format: "temp=45.0'C"
+        // Output format: "temp=45.0'C"
+        int startPos = output.indexOf('=');
+        int endPos = output.indexOf('\'');
 
-            int startPos = output.indexOf('=');
-            int endPos = output.indexOf('\'');
-            
-            if (startPos > 0 && endPos > startPos) {
-                QString tempStr = output.mid(startPos +1, endPos - startPos - 1);
-                bool ok;
-                double temp = tempStr.toDouble(&ok);
+        if (startPos > 0 && endPos > startPos) {
+            QString tempStr = output.mid(startPos + 1, endPos - startPos - 1);
+            bool ok;
+            double temp = tempStr.toDouble(&ok);
 
-                if (ok) {
-                    return static_cast<int>(temp);
-                }
+            if (ok) {
+                return static_cast<int>(temp);
             }
         }
     }
 
-    // Fallback: Use thermal_zone0 (same as CPU temp on Pi)
-    QString TempStr = FileReader::readFirstLine("/sys/class/thermal/thermal_zone0/temp");
+    // Fallback: Use thermal zone0 (same as CPU on Pi)
+    int tempMilliDegrees = FileReader::readInt("/sys/class/thermal/thermal_zone0/temp", 0);
 
-    if (TempStr.isEmpty()) {
-        return 0;
+    if (tempMilliDegrees > 0) {
+        return tempMilliDegrees / 1000;
     }
 
-    bool ok;
-    int tempMilliDegrees = TempStr.toInt(&ok);
-
-    if (!ok) {
-        return 0;
-    }
-
-    return tempMilliDegrees / 1000;
+    return 0;
 }
 
 int GpuMonitor::parseMemUsage()
 {
     if (!m_vcgencmdAvailable) {
-        // Return -1 to signal "not available"
-        // QML will hide GPU card when < 0
-        return -1;
+        return -1; // Signal "not available"
     }
 
-    // Try to get GPU memory using vcgencmd
-    QProcess process;
-    process.start("vcgencmd", QStringList() << "get_mem" << "gpu");
+    QString output = executeVcgencmnd({"get_mem", "gpu"});
 
-    if (!process.waitForFinished(1000)) {
-        return -1;
-    }
-
-    QString output = process.readAllStandardOutput().trimmed();
     // Output format: "gpu=256M"
-
     int equalPos = output.indexOf('=');
     int mPos = output.indexOf('M');
 
@@ -102,16 +80,53 @@ int GpuMonitor::parseMemUsage()
     return -1;
 }
 
-bool GpuMonitor::isVcgencmdAvailable()
+int GpuMonitor::parseClockFreq()
+{
+    if (!m_vcgencmdAvailable) {
+        return -1;
+    }
+
+    QString output = executeVcgencmnd({"measure_clock", "core"});
+
+    // Output format: "frequency(48)=500000000" (in Hz)
+    int equalPos = output.indexOf('=');
+
+    if (equalPos > 0) {
+        QString freqStr = output.mid(equalPos + 1).trimmed();
+        bool ok;
+        long long freqHz = freqStr.toLongLong(&ok);
+
+        if (ok) {
+            // Convert Hz to MHZ
+            return static_cast<int>(freqHz / 1000000);
+        }
+    }
+
+    return -1;
+}
+
+bool GpuMonitor::checkVcgencmdAvailable()
 {
     // Check if vcgencmd binary exists
     QProcess process;
-    process.start("which", QStringList() << "vcgencmd"); 
+    process.start("which", {"vcgencmd"}); 
 
     if (!process.waitForFinished(1000)) {
         return false;
     }
 
-    QString output= process.readAllStandardOutput().trimmed();
+    QString output = process.readAllStandardOutput().trimmed();
     return !output.isEmpty();
+}
+
+QString GpuMonitor::executeVcgencmnd(const QStringList &args)
+{
+    QProcess process;
+    process.start("vcgencmd", args);
+
+    if (!process.waitForFinished(1000)) {
+        return QString();
+    }
+
+    return QString::fromUtf8(process.readAllStandardOutput().trimmed());
 }
