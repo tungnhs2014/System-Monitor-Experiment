@@ -98,7 +98,7 @@ public:
     /**
      * @brief Enable/disable file logging
      */
-    void setFileLogginngEnabled(bool enabled);
+    void setFileLoggingEnabled(bool enabled);
     void setLogFilePath(const QString& path);
 
 signals:

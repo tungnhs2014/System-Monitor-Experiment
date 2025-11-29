@@ -16,7 +16,7 @@ GpuMonitor::GpuMonitor(QObject *parent)
 {
     m_vcgencmdAvailable = checkVcgencmdAvailable();
 
-    if (!m_vcgencmdAvailable) {
+    if (m_vcgencmdAvailable) {
         LOG_INFO("GpuMonitor: vcgencmd available - using real GPU metrics");
     }
     else {
@@ -28,7 +28,7 @@ int GpuMonitor::parseTemp()
 {
     if (m_vcgencmdAvailable) {
         // Use vcgencmd for accurate GPU temperature
-        QString output = executeVcgencmnd({"measure_temp"});
+        QString output = executeVcgencmd({"measure_temp"});
 
         // Output format: "temp=45.0'C"
         int startPos = output.indexOf('=');
@@ -61,7 +61,7 @@ int GpuMonitor::parseMemUsage()
         return -1; // Signal "not available"
     }
 
-    QString output = executeVcgencmnd({"get_mem", "gpu"});
+    QString output = executeVcgencmd({"get_mem", "gpu"});
 
     // Output format: "gpu=256M"
     int equalPos = output.indexOf('=');
@@ -86,7 +86,7 @@ int GpuMonitor::parseClockFreq()
         return -1;
     }
 
-    QString output = executeVcgencmnd({"measure_clock", "core"});
+    QString output = executeVcgencmd({"measure_clock", "core"});
 
     // Output format: "frequency(48)=500000000" (in Hz)
     int equalPos = output.indexOf('=');
@@ -119,7 +119,7 @@ bool GpuMonitor::checkVcgencmdAvailable()
     return !output.isEmpty();
 }
 
-QString GpuMonitor::executeVcgencmnd(const QStringList &args)
+QString GpuMonitor::executeVcgencmd(const QStringList &args)
 {
     QProcess process;
     process.start("vcgencmd", args);
@@ -128,5 +128,5 @@ QString GpuMonitor::executeVcgencmnd(const QStringList &args)
         return QString();
     }
 
-    return QString::fromUtf8(process.readAllStandardOutput().trimmed());
+    return QString::fromUtf8(process.readAllStandardOutput()).trimmed();
 }

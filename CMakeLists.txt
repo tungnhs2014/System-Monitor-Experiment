@@ -61,7 +61,7 @@ message(STATUS "Target Platform: ${PLATFORM_NAME}")
 set(MODEL_SOURCES
     src/model/CpuMonitor.cpp
     src/model/GpuMonitor.cpp
-    # src/model/MemoryMonitor.cpp
+    src/model/MemoryMonitor.cpp
     # src/model/StorageMonitor.cpp
     # src/model/NetworkMonitor.cpp
     # src/model/SettingsManager.cpp
@@ -70,7 +70,7 @@ set(MODEL_SOURCES
 set(MODEL_HEADERS
     src/model/CpuMonitor.h
     src/model/GpuMonitor.h
-    # src/model/MemoryMonitor.h
+    src/model/MemoryMonitor.h
     # src/model/StorageMonitor.h
     # src/model/NetworkMonitor.h
     # src/model/SettingsManager.h

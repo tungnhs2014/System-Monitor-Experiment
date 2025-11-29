@@ -33,10 +33,11 @@ CpuMonitor::CpuMonitor(QObject *parent)
     m_tempHistory.reserve(MAX_TEMP_HISTORY);
     
     // Find temperartue sensor path
+    m_tempSensorPath = findTempSensorPath();
 
-        LOG_INFO(QString("CpuMonitor initialized - %1 cores, temp sensor: %2")
-             .arg(m_coreCount)
-             .arg(m_tempSensorPath.isEmpty() ? "not found" : m_tempSensorPath));
+    LOG_INFO(QString("CpuMonitor initialized - %1 cores, temp sensor: %2")
+            .arg(m_coreCount)
+            .arg(m_tempSensorPath.isEmpty() ? "not found" : m_tempSensorPath));
 }
 
 int CpuMonitor::parseUsage()
@@ -44,7 +45,6 @@ int CpuMonitor::parseUsage()
     unsigned long long total, idle;
 
     if (!parseCpuStats(total, idle)) {
-        qWarning() << "Failed to parse CPU stats";
         return 0;
     }
 
@@ -131,7 +131,7 @@ void CpuMonitor::updateTempHistory(int temp)
     m_tempHistory.append(temp);
 
     // Maintain circular buffer behavior
-    if (m_tempHistory.size() > MAX_TEMP_HISTORY) {
+    while (m_tempHistory.size() > MAX_TEMP_HISTORY) {
         m_tempHistory.removeFirst();
     }
 }
@@ -288,5 +288,5 @@ QString CpuMonitor::findTempSensorPath()
     }
 
     LOG_WARNING("No temperature sensor found");
-    QString();
+    return QString();
 }

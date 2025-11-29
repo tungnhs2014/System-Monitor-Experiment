@@ -44,8 +44,7 @@ void Logger::log(Level level, const QString &message, const QString &source)
     trimLogs();
 
     // Output to console
-    switch (level)
-    {
+    switch (level) {
         case Debug:
             qDebug().noquote() << entry;
             break;
@@ -58,6 +57,7 @@ void Logger::log(Level level, const QString &message, const QString &source)
         case Error:
         case Critical:
             qCritical().noquote() << entry;
+            break;
         default:
             break;
     }
@@ -153,7 +153,7 @@ void Logger::setMaxLogEntries(int max)
     }
 }
 
-void Logger::setFileLogginngEnabled(bool enabled)
+void Logger::setFileLoggingEnabled(bool enabled)
 {
     m_fileLoggingEnabled = enabled;
 
@@ -161,7 +161,7 @@ void Logger::setFileLogginngEnabled(bool enabled)
         m_logFile = new QFile(m_logFilePath);
         m_logFile->open(QIODevice::Append | QIODevice::Text);
     } 
-    else if (!enabled && !m_logFile) {
+    else if (!enabled && m_logFile) {
         m_logFile->close();
         delete m_logFile;
         m_logFile = nullptr;
@@ -181,8 +181,7 @@ void Logger::setLogFilePath(const QString &path)
 
 QString Logger::levelToString(Level level) const
 {
-    switch (level)
-    {
+    switch (level) {
         case Debug:    return "DEBUG";
         case Info:     return "INFO";
         case Warning:  return "WARN";

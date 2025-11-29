@@ -56,11 +56,11 @@ private:
     bool checkVcgencmdAvailable();
 
     /**
-     * @brief Execute vcgencmnd with arguments
+     * @brief Execute vcgencmd with arguments
      * @param args Command arguments
      * @return Command output
      */
-    QString executeVcgencmnd(const QStringList& args);
+    QString executeVcgencmd(const QStringList& args);
 
 private:
     bool m_vcgencmdAvailable;

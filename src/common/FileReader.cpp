@@ -5,12 +5,12 @@
  * ============================================
  */
 
- #include "FileReader.h"
- #include <QFile>
- #include <QTextStream>
- #include <QProcess>
- #include <QDir>
- #include <QFileInfo>
+#include "FileReader.h"
+#include <QFile>
+#include <QTextStream>
+#include <QProcess>
+#include <QDir>
+#include <QFileInfo>
 
 QString FileReader::readAll(const QString &path)
 {
