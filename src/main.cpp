@@ -99,7 +99,12 @@ int main(int argc, char *argv[])
     // ==================== Register Context Properties ====================
     engine.rootContext()->setContextProperty("systemInfo", systemController);
     engine.rootContext()->setContextProperty("navigation", navController);
+
+    // Logger is only available in QML when LOG_LEVEL > 0 (Debug/Development builds)
+    // In Release builds (LOG_LEVEL=0), Logger is a stub without QObject inheritance
+#if LOG_LEVEL > LOG_LEVEL_OFF
     engine.rootContext()->setContextProperty("logger", &Logger::instance());
+#endif
     
     // ==================== Load QML ====================
     const QUrl url(QStringLiteral("qrc:/qml/Main.qml"));

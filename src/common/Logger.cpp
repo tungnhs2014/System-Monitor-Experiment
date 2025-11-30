@@ -6,112 +6,205 @@
  */
 
 #include "Logger.h"
-#include "Constants.h"
-#include <QDebug>
-#include <QMutexLocker>
-#include <QDir>
 
-Logger::Logger(QObject *parent)
-    : QObject(parent)
-    , m_maxLogEntries(100)
-    , m_fileLoggingEnabled(false)
-    , m_logFile(nullptr)
+// Only compile implementation when logging is enabled
+#if LOG_LEVEL > LOG_LEVEL_OFF
+
+#include <QDebug>
+#include <QDateTime>
+#include <QDir>
+#include <QStandardPaths>
+#include <QCoreApplication>
+
+Logger::Logger()
+    : QObject(nullptr)
+    , m_logLevel(LOG_LEVEL)
+    , m_maxLogEntries(DEFAULT_MAX_ENTRIES)
+    , m_logToFile(false)
+    , m_logFilePath("")
 {
+    // Set default log file path
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(appDataPath);
+    m_logFilePath = appDataPath + "/system-monitor.log";
 }
 
 Logger::~Logger()
 {
-    if (m_logFile) {
-        m_logFile->close();
-        delete m_logFile;
+    if (m_logFile.isOpen()) {
+        m_logFile.close();
     }
 }
 
-Logger &Logger::instance()
+Logger& Logger::instance()
 {
-    static Logger instance;
-    return instance;
+    static Logger inst;
+    return inst;
 }
 
-void Logger::log(Level level, const QString &message, const QString &source)
+void Logger::debug(const QString& message)
+{
+    if (m_logLevel >= LOG_LEVEL_DEBUG) {
+        log("DEBUG", message);
+    }
+}
+
+void Logger::info(const QString& message)
+{
+    if (m_logLevel >= LOG_LEVEL_INFO) {
+        log("INFO", message);
+    }
+}
+
+void Logger::warning(const QString& message)
+{
+    if (m_logLevel >= LOG_LEVEL_WARNING) {
+        log("WARN", message);
+    }
+}
+
+void Logger::error(const QString& message)
+{
+    if (m_logLevel >= LOG_LEVEL_ERROR) {
+        log("ERROR", message);
+    }
+}
+
+void Logger::critical(const QString& message)
+{
+    if (m_logLevel >= LOG_LEVEL_CRITICAL) {
+        log("CRIT", message);
+    }
+}
+
+void Logger::log(const QString& level, const QString& message)
 {
     QMutexLocker locker(&m_mutex);
-
-    QString entry = formatLogEntry(level, message, source);
-
-    // Add to internal log list
+    
+    QString formatted = formatMessage(level, message);
+    
+    // Console output
+#if LOG_LEVEL >= LOG_LEVEL_DEBUG
+    if (level == "DEBUG") {
+        qDebug().noquote() << formatted;
+    } else
+#endif
+#if LOG_LEVEL >= LOG_LEVEL_INFO
+    if (level == "INFO") {
+        qInfo().noquote() << formatted;
+    } else
+#endif
+#if LOG_LEVEL >= LOG_LEVEL_WARNING
+    if (level == "WARN") {
+        qWarning().noquote() << formatted;
+    } else
+#endif
+    {
+        qCritical().noquote() << formatted;
+    }
+    
+    // File output
+    if (m_logToFile) {
+        writeToFile(formatted);
+    }
+    
+    // Store in memory for QML access
+    QVariantMap entry;
+    entry["time"] = QTime::currentTime().toString("hh:mm:ss");
+    entry["level"] = level;
+    entry["message"] = message;
+    
     m_logs.prepend(entry);
-    trimLogs();
-
-    // Output to console
-    switch (level) {
-        case Debug:
-            qDebug().noquote() << entry;
-            break;
-        case Info:
-            qInfo().noquote() << entry;
-            break;
-        case Warning:
-            qWarning().noquote() << entry;
-            break;
-        case Error:
-        case Critical:
-            qCritical().noquote() << entry;
-            break;
-        default:
-            break;
+    
+    while (m_logs.size() > m_maxLogEntries) {
+        m_logs.removeLast();
     }
-
-    // Write to file if enabled
-    if (m_fileLoggingEnabled) {
-        writeToFile(entry);
-    }
-
+    
     emit logsChanged();
-    emit newLogEntry(entry);
+    emit newLogEntry(level, message);
 }
 
-void Logger::debug(const QString &message, const QString &source)
+QString Logger::formatMessage(const QString& level, const QString& message)
 {
-    log(Debug, message, source);
+    return QString("[%1] [%2] %3")
+        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz"))
+        .arg(level, -5)
+        .arg(message);
 }
 
-void Logger::info(const QString &message, const QString &source)
+void Logger::writeToFile(const QString& formattedMessage)
 {
-    log(Info, message, source);
+    // Check file size and rotate if needed
+    if (m_logFile.isOpen() && m_logFile.size() > MAX_FILE_SIZE) {
+        rotateLogFile();
+    }
+    
+    // Open file if not open
+    if (!m_logFile.isOpen()) {
+        m_logFile.setFileName(m_logFilePath);
+        if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            qWarning() << "Failed to open log file:" << m_logFilePath;
+            m_logToFile = false;
+            return;
+        }
+    }
+    
+    QTextStream stream(&m_logFile);
+    stream << formattedMessage << "\n";
+    stream.flush();
 }
 
-void Logger::warning(const QString &message, const QString &source)
+void Logger::rotateLogFile()
 {
-    log(Warning, message, source);
+    if (m_logFile.isOpen()) {
+        m_logFile.close();
+    }
+    
+    // Rename old file
+    QString backupPath = m_logFilePath + ".old";
+    QFile::remove(backupPath);
+    QFile::rename(m_logFilePath, backupPath);
+    
+    // Open new file
+    m_logFile.setFileName(m_logFilePath);
+    m_logFile.open(QIODevice::WriteOnly | QIODevice::Text);
 }
 
-void Logger::error(const QString &message, const QString &source)
+void Logger::setLogToFile(bool enabled)
 {
-    log(Error, message, source);
+    QMutexLocker locker(&m_mutex);
+    m_logToFile = enabled;
+    
+    if (!enabled && m_logFile.isOpen()) {
+        m_logFile.close();
+    }
 }
 
-void Logger::critical(const QString &message, const QString &source)
+void Logger::setLogFilePath(const QString& path)
 {
-    log(Critical, message, source);
+    QMutexLocker locker(&m_mutex);
+    
+    if (m_logFile.isOpen()) {
+        m_logFile.close();
+    }
+    
+    m_logFilePath = path;
 }
 
-void Logger::addLog(const QString &level, const QString &message)
+void Logger::setMaxLogEntries(int max)
 {
-    Level lvl = Info;
-
-    if (level == "DEBUG") lvl = Debug;
-    else if (level == "INFO") lvl = Info;
-    else if (level == "WARN" || level == "WARNING") lvl = Warning;
-    else if (level == "ERROR") lvl = Error;
-    else if (level == "CRIT" || level == "CRITICAL") lvl = Critical;
-
-    log(lvl, message, "QML");
+    QMutexLocker locker(&m_mutex);
+    m_maxLogEntries = qMax(10, max);
+    
+    while (m_logs.size() > m_maxLogEntries) {
+        m_logs.removeLast();
+    }
 }
 
-QStringList Logger::logs() const
+void Logger::setLogLevel(int level)
 {
-    return m_logs;
+    QMutexLocker locker(&m_mutex);
+    m_logLevel = qBound(LOG_LEVEL_OFF, level, LOG_LEVEL_DEBUG);
 }
 
 void Logger::clearLogs()
@@ -121,100 +214,17 @@ void Logger::clearLogs()
     emit logsChanged();
 }
 
-bool Logger::exportLogs(const QString &filePath)
+QString Logger::getLogLevelName() const
 {
-    QMutexLocker locker(&m_mutex);
-
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        return false;
-    }
-
-    QTextStream stream(&file);
-    for (const QString &entry : m_logs) {
-        stream << entry << "\n";
-    }
-
-    file.close();
-    return true;
-}
-
-int Logger::maxLogEntries() const
-{
-    return m_maxLogEntries;
-}
-
-void Logger::setMaxLogEntries(int max)
-{
-    if (m_maxLogEntries != max) {
-        m_maxLogEntries = max;
-        trimLogs();
-        emit maxLogEntriesChanged();
+    switch (m_logLevel) {
+        case LOG_LEVEL_OFF:      return "OFF";
+        case LOG_LEVEL_CRITICAL: return "CRITICAL";
+        case LOG_LEVEL_ERROR:    return "ERROR";
+        case LOG_LEVEL_WARNING:  return "WARNING";
+        case LOG_LEVEL_INFO:     return "INFO";
+        case LOG_LEVEL_DEBUG:    return "DEBUG";
+        default:                 return "UNKNOWN";
     }
 }
 
-void Logger::setFileLoggingEnabled(bool enabled)
-{
-    m_fileLoggingEnabled = enabled;
-
-    if (enabled && !m_logFilePath.isEmpty() && !m_logFile) {
-        m_logFile = new QFile(m_logFilePath);
-        m_logFile->open(QIODevice::Append | QIODevice::Text);
-    } 
-    else if (!enabled && m_logFile) {
-        m_logFile->close();
-        delete m_logFile;
-        m_logFile = nullptr;
-    }
-}
-
-void Logger::setLogFilePath(const QString &path)
-{
-    m_logFilePath = path;
-
-    // Create directory if needed
-    QDir dir = QFileInfo(path).absoluteDir();
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-}
-
-QString Logger::levelToString(Level level) const
-{
-    switch (level) {
-        case Debug:    return "DEBUG";
-        case Info:     return "INFO";
-        case Warning:  return "WARN";
-        case Error:    return "ERROR";
-        case Critical: return "CRIT";
-        default:       return "UNKNOWN";    
-    }
-}
-
-QString Logger::formatLogEntry(Level level, const QString &message, const QString &source) const
-{
-    QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-    QString levelStr= levelToString(level);
-
-    if (source.isEmpty()) {
-        return QString("[%1] [%2] %3").arg(timestamp, levelStr, message);
-    }
-
-    return QString("[%1] [%2] [%3] %4").arg(timestamp, levelStr, source, message);
-} 
-
-void Logger::writeToFile(const QString &entry)
-{ 
-    if (m_logFile && m_logFile->isOpen()) {
-        QTextStream stream(m_logFile);
-        stream << entry << "\n";
-        m_logFile->flush();
-    }
-}
-
-void Logger::trimLogs()
-{
-    while (m_logs.size() > m_maxLogEntries) {
-        m_logs.removeLast();
-    }
-}
+#endif  // LOG_LEVEL > LOG_LEVEL_OFF

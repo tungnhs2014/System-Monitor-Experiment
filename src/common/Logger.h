@@ -1,142 +1,193 @@
 /**
  * ============================================================================
  * File: src/common/Logger.h
- * Description: Professional logging system with file and console output
+ * Description: High-performance logging system with compile-time optimization
+ * 
+ * LOG_LEVEL (defined in CMakeLists.txt):
+ *   0 = OFF      - No logging (Release)
+ *   1 = CRITICAL - Critical errors only
+ *   2 = ERROR    - Errors and above
+ *   3 = WARNING  - Warnings and above
+ *   4 = INFO     - Info and above
+ *   5 = DEBUG    - All messages (Debug)
+ * 
+ * Usage:
+ *   LOG_DEBUG("Debug message");
+ *   LOG_INFO("Info message");
+ *   LOG_WARNING("Warning message");
+ *   LOG_ERROR("Error message");
+ *   LOG_CRITICAL("Critical message");
  * ============================================================================
  */
 
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <QObject>
 #include <QString>
-#include <QStringList>
-#include <QDateTime>
+
+// ============================================================================
+// Log Level Constants
+// ============================================================================
+#define LOG_LEVEL_OFF      0
+#define LOG_LEVEL_CRITICAL 1
+#define LOG_LEVEL_ERROR    2
+#define LOG_LEVEL_WARNING  3
+#define LOG_LEVEL_INFO     4
+#define LOG_LEVEL_DEBUG    5
+
+// Default to OFF if not defined
+#ifndef LOG_LEVEL
+    #define LOG_LEVEL LOG_LEVEL_OFF
+#endif
+
+// ============================================================================
+// Compile-Time Log Macros (Zero overhead when disabled)
+// ============================================================================
+
+#if LOG_LEVEL >= LOG_LEVEL_DEBUG
+    #define LOG_DEBUG(msg)    Logger::instance().debug(msg)
+#else
+    #define LOG_DEBUG(msg)    ((void)0)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_INFO
+    #define LOG_INFO(msg)     Logger::instance().info(msg)
+#else
+    #define LOG_INFO(msg)     ((void)0)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_WARNING
+    #define LOG_WARNING(msg)  Logger::instance().warning(msg)
+    #define LOG_WARN(msg)     Logger::instance().warning(msg)
+#else
+    #define LOG_WARNING(msg)  ((void)0)
+    #define LOG_WARN(msg)     ((void)0)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_ERROR
+    #define LOG_ERROR(msg)    Logger::instance().error(msg)
+#else
+    #define LOG_ERROR(msg)    ((void)0)
+#endif
+
+#if LOG_LEVEL >= LOG_LEVEL_CRITICAL
+    #define LOG_CRITICAL(msg) Logger::instance().critical(msg)
+    #define LOG_CRIT(msg)     Logger::instance().critical(msg)
+#else
+    #define LOG_CRITICAL(msg) ((void)0)
+    #define LOG_CRIT(msg)     ((void)0)
+#endif
+
+// ============================================================================
+// Logger Class (Only compiled when LOG_LEVEL > 0)
+// ============================================================================
+
+#if LOG_LEVEL > LOG_LEVEL_OFF
+
+#include <QObject>
 #include <QMutex>
 #include <QFile>
+#include <QVariantList>
 
 /**
  * @class Logger
- * @brief Singleton logger for application-wide logging
- * 
- * Features:
- * - Thread-safe logging
- * - Multiple log levels
- * - Console and file output
- * - Log rotation
- * - QML accessible
+ * @brief Thread-safe singleton logger with file and console output
  */
-
-
-class Logger : public QObject 
+class Logger : public QObject
 {
     Q_OBJECT
-
-    // QML Properties
-    Q_PROPERTY(QStringList logs READ logs NOTIFY logsChanged)
-    Q_PROPERTY(int maxLogEntries READ maxLogEntries WRITE setMaxLogEntries NOTIFY maxLogEntriesChanged)
+    Q_PROPERTY(QVariantList logs READ logs NOTIFY logsChanged)
 
 public:
-    /**
-     * @brief Log severity levels
-     */
-
-    enum Level {
-        Debug,
-        Info,
-        Warning,
-        Error,
-        Critical
-    };
-    Q_ENUM(Level)
-
     /**
      * @brief Get singleton instance
      */
     static Logger& instance();
 
-    /**
-     * @brief Log a message with specified level
-     */
-    void log(Level level, const QString& message, const QString& source = QString());
+    // Delete copy/move
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
 
-    /**
-     * @brief Log a message with specified level
-     */
-    void debug(const QString& message, const QString& source = QString());
-    void info(const QString& message, const QString& source = QString());
-    void warning(const QString& message, const QString& source = QString());
-    void error(const QString& message, const QString& source = QString());
-    void critical(const QString& message, const QString& source = QString());
+    // ==================== Logging Methods ====================
+    void debug(const QString& message);
+    void info(const QString& message);
+    void warning(const QString& message);
+    void error(const QString& message);
+    void critical(const QString& message);
 
-    /**
-     * @brief QML invokable logging
-     */
-    Q_INVOKABLE void addLog(const QString& level, const QString& message);
-
-    /**
-     * @brief Get all log entries
-     */
-    QStringList logs() const;
-
-    /**
-     * @brief Clear all logs
-     */
-    Q_INVOKABLE void clearLogs();
-
-    /**
-     * @brief Export logs to file
-     */
-    Q_INVOKABLE bool exportLogs(const QString& filePath);
-
-    /**
-     * @brief Max log entries property
-     */
-    int maxLogEntries() const;
-    void setMaxLogEntries(int max);
-
-    /**
-     * @brief Enable/disable file logging
-     */
-    void setFileLoggingEnabled(bool enabled);
+    // ==================== Configuration ====================
+    void setLogToFile(bool enabled);
     void setLogFilePath(const QString& path);
+    void setMaxLogEntries(int max);
+    void setLogLevel(int level);
+    
+    int logLevel() const { return m_logLevel; }
+    bool isLogToFile() const { return m_logToFile; }
+
+    // ==================== QML Access ====================
+    QVariantList logs() const { return m_logs; }
+    Q_INVOKABLE void clearLogs();
+    Q_INVOKABLE QString getLogLevelName() const;
 
 signals:
     void logsChanged();
-    void maxLogEntriesChanged();
-    void newLogEntry(const QString& entry);
+    void newLogEntry(const QString& level, const QString& message);
 
 private:
-    explicit Logger(QObject* parent = nullptr);
-    ~Logger();
+    Logger();
+    ~Logger() override;
 
-    // Prevent copying
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
-
-    QString levelToString(Level level) const;
-    QString formatLogEntry(Level level, const QString& message, const QString& source) const;
-    void writeToFile(const QString& entry);
-    void trimLogs();
+    void log(const QString& level, const QString& message);
+    void writeToFile(const QString& formattedMessage);
+    void rotateLogFile();
+    QString formatMessage(const QString& level, const QString& message);
 
 private:
-    QStringList m_logs;
-    int m_maxLogEntries;
     QMutex m_mutex;
-
-    bool m_fileLoggingEnabled;
+    QVariantList m_logs;
+    QFile m_logFile;
+    
+    int m_logLevel;
+    int m_maxLogEntries;
+    bool m_logToFile;
     QString m_logFilePath;
-    QFile* m_logFile;
+    
+    static constexpr int DEFAULT_MAX_ENTRIES = 100;
+    static constexpr qint64 MAX_FILE_SIZE = 1024 * 1024;  // 1MB
 };
 
-// ============================================================================
-// Convenience Macros
-// ============================================================================
+#else  // LOG_LEVEL == LOG_LEVEL_OFF
 
-#define LOG_DEBUG(msg)      Logger::instance().debug(msg, __FUNCTION__)
-#define LOG_INFO(msg)       Logger::instance().info(msg, __FUNCTION__)
-#define LOG_WARNING(msg)    Logger::instance().warning(msg, __FUNCTION__)
-#define LOG_ERROR(msg)      Logger::instance().error(msg, __FUNCTION__)
-#define LOG_CRITICAL(msg)   Logger::instance().critical(msg, __FUNCTION__)
+/**
+ * @brief Stub Logger class for Release builds
+ * Provides minimal interface with zero overhead
+ */
+class Logger
+{
+public:
+    static Logger& instance() {
+        static Logger inst;
+        return inst;
+    }
+    
+    // Empty implementations - will be optimized out
+    inline void debug(const QString&) {}
+    inline void info(const QString&) {}
+    inline void warning(const QString&) {}
+    inline void error(const QString&) {}
+    inline void critical(const QString&) {}
+    
+    inline void setLogToFile(bool) {}
+    inline void setLogFilePath(const QString&) {}
+    inline void setMaxLogEntries(int) {}
+    inline void setLogLevel(int) {}
+    
+private:
+    Logger() = default;
+};
 
-#endif //LOGGER_H
+#endif  // LOG_LEVEL > LOG_LEVEL_OFF
+
+#endif  // LOGGER_H
