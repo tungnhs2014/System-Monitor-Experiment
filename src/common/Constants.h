@@ -79,6 +79,19 @@ namespace Threshold {
     constexpr int STORAGE_CRITICAL = 95;
 }
 
+// ============================================================================
+// Navigation Indices
+// ============================================================================
+namespace NavIndex {
+    constexpr int DASHBOARD = 0;
+    constexpr int CPU = 1;
+    constexpr int MEMORY = 2;
+    constexpr int STORAGE = 3;
+    constexpr int NETWORK = 4;
+    constexpr int SETTINGS = 5;
+}
+
+
 }
 
 #endif // CONSTANTS_H

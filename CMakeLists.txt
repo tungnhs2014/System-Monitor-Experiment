@@ -78,13 +78,13 @@ set(MODEL_HEADERS
 
 # --- CONTROLLER Layer  ---
 set(CONTROLLER_SOURCES
-    # src/controller/SystemController.cpp
-    # src/controller/NavigationController.cpp
+    src/controller/SystemController.cpp
+    src/controller/NavigationController.cpp
 )
 
 set(CONTROLLER_HEADERS
-    # src/controller/SystemController.h
-    # src/controller/NavigationController.h
+    src/controller/SystemController.h
+    src/controller/NavigationController.h
 )
 
 # --- COMMON Layer ---
