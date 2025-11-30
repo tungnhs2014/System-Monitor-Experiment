@@ -1,5 +1,5 @@
 /*
- * File: qml/components/CardContainer.qml
+ * File: qml/views/components/CardContainer.qml
  */
 
 import QtQuick 2.15

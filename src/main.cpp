@@ -1,106 +1,130 @@
-/*
- * ============================================
- * File: main.cpp
- * Description: Main entry point - can load different QML files
- * ============================================
+/**
+ * ============================================================================
+ * File: src/main.cpp
+ * Description: Application entry point
+ * ============================================================================
  */
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QScreen>
-#include <QDebug>
+#include <QQuickWindow>
+#include <QFont>
+#include <QFile>
+#include <QDir>
+
+#include "controller/SystemController.h"
+#include "controller/NavigationController.h"
+
+#include "common/Constants.h"
+#include "common/Logger.h"
+
+#ifdef PLATFORM_RASPBERRY_PI
+/**
+ * @brief Auto-detect XPT2046 touch input device
+ */
+QString findTouchDevice()
+{
+    for (int i = 0; i < 10; i++) {
+        QString sysPath = QString("/sys/class/input/event%1/device/name").arg(i);
+
+        QFile nameFile(sysPath);
+        if (nameFile.open(QIODevice::ReadOnly | QIODevice:: Text)) {
+            QString deviceName = QString::fromUtf8(nameFile.readAll()).trimmed();
+            nameFile.close();
+
+            qDebug() << "event" << i << ":" << deviceName;
+            
+            if (deviceName.contains("XPT2046", Qt::CaseInsensitive) ||
+                deviceName.contains("ADS7846", Qt::CaseInsensitive) ||
+                deviceName.contains("Touchscreen", Qt::CaseInsensitive)) {
+                
+                QString devicePath = QString("/dev/input/event%1").arg(i);
+                qInfo() << "✓ Touch device found:" << devicePath << "-" << deviceName;
+                return devicePath;
+            }
+        }
+    }
+    qWarning() << "Touch device not found, using fallback: /dev/input/event0";
+    return "/dev/input/event0";
+}
+
+#endif
 
 int main(int argc, char *argv[])
 {
-    // Set attributes before QGuiApplication
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    // ==================== Platform Configuration ====================
+#ifdef PLATFORM_RASPBERRY_PI
+    // Raspberry Pi: Use linuxfb with ILI9341
+    qputenv("QT_QPA_PLATFORM", "linuxfb:fb=/dev/fb1:size=320x240:mmSize=60x45:offset=0x0");
     
+    QString touchDevice = findTouchDevice();
+    QByteArray touchParams = QString("%1:rotate=0:invertx=0:inverty=0")
+                            .arg(touchDevice).toUtf8();
+    qputenv("QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS", touchParams);
+    qputenv("QT_QPA_GENERIC_PLUGINS", QString("evdevtouch:%1").arg(touchDevice).toUtf8());
+    
+    qDebug() << "Platform: Raspberry Pi - RGB565 mode";
+    qDebug() << "Touch device:" << touchDevice;
+#else
+    qDebug() << "Platform: Desktop";
+#endif
+
+    // ==================== Create Application ====================
     QGuiApplication app(argc, argv);
-    
+
     // Application metadata
-    app.setOrganizationName("ILI9341");
-    app.setOrganizationDomain("ili9341.local");
-    app.setApplicationName("System Monitor");
-    
-    // ==================== QML ENGINE ====================
-    
+    app.setOrganizationName(App::Info::ORGANIZATION);
+    app.setOrganizationDomain(App::Info::DOMAIN);
+    app.setApplicationName(App::Info::NAME);
+    app.setApplicationVersion(App::Info::VERSION);
+
+    // ==================== Configure Font ====================
+    QFont appFont;
+    appFont.setFamily("DejaVu Sans");
+    appFont.setHintingPreference(QFont::PreferFullHinting);
+    app.setFont(appFont);
+
+    // ==================== Initialize Logger ====================
+    Logger::instance().setMaxLogEntries(100);
+    LOG_INFO("Application starting...");
+
+    // ==================== Create QML Engine ====================
     QQmlApplicationEngine engine;
 
+    // ==================== Create Controllers ====================
+    SystemController* systemController = new SystemController(&app);
+    NavigationController* navController = new NavigationController(&app);
+
+    // ==================== Register Context Properties ====================
+    engine.rootContext()->setContextProperty("systemInfo", systemController);
+    engine.rootContext()->setContextProperty("navigation", navController);
+    engine.rootContext()->setContextProperty("logger", &Logger::instance());
     
-    // ==================== DETERMINE WHICH QML TO LOAD ====================
+    // ==================== Load QML ====================
+    const QUrl url(QStringLiteral("qrc:/qml/Main.qml"));
     
-    // OPTION 1: Use command-line argument
-    // Run: ./ili9341-system memory
-    //      ./ili9341-system cpu
-    //      ./ili9341-system storage
-    
-    QString qmlFile = "qrc:/qml/Main.qml";  // Default
-    
-    if (argc > 1) {
-        QString arg = QString(argv[1]).toLower();
-        
-        if (arg == "memory") {
-            qmlFile = "qrc:/qml/Main_MemoryDetail.qml";
-            qDebug() << "Loading Memory Detail page...";
-        }
-        else if (arg == "cpu") {
-            qmlFile = "qrc:/qml/Main_CpuDetail.qml";
-            qDebug() << "Loading CPU Detail page...";
-        }
-        else if (arg == "storage") {
-            qmlFile = "qrc:/qml/Main_StorageDetail.qml";
-            qDebug() << "Loading Storage Detail page...";
-        }
-        else if (arg == "dashboard") {
-            qmlFile = "qrc:/qml/Main_Dashboard.qml";
-            qDebug() << "Loading Dashboard page...";
-        }
-        else {
-            qDebug() << "Unknown argument:" << arg;
-            qDebug() << "Usage: ./ili9341-system [memory|cpu|storage|dashboard]";
-        }
-    }
-    
-    // OPTION 2: Hardcode for testing (comment out the above, use this)
-    /*
-    // Uncomment ONE of these:
-    // qmlFile = "qrc:/qml/Main_MemoryDetail.qml";
-    // qmlFile = "qrc:/qml/Main_CpuDetail.qml";
-    // qmlFile = "qrc:/qml/Main_StorageDetail.qml";
-    // qmlFile = "qrc:/qml/Main_Dashboard.qml";
-    */
-    
-    // ==================== LOAD QML ====================
-    
-    qDebug() << "Loading QML file:" << qmlFile;
-    
-    const QUrl url(qmlFile);
-    
-    // Error handling
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
-                     &app, [url](QObject *obj, const QUrl &objUrl) {
+                     &app, [url](QObject* obj, const QUrl& objUrl) {
         if (!obj && url == objUrl) {
-            qCritical() << "Failed to load QML file:" << url;
+            qCritical() << "Failed to load QML";
             QCoreApplication::exit(-1);
-        } else {
-            qDebug() << "QML loaded successfully!";
         }
     }, Qt::QueuedConnection);
-    
+
     engine.load(url);
-    
-    // ==================== SCREEN INFO (Debug) ====================
-    
-    QScreen *screen = app.primaryScreen();
-    if (screen) {
-        QRect screenGeometry = screen->geometry();
-        qDebug() << "Screen geometry:" << screenGeometry;
-        qDebug() << "Screen size:" << screenGeometry.width() << "x" << screenGeometry.height();
-        qDebug() << "Physical DPI:" << screen->physicalDotsPerInch();
+
+    if (engine.rootObjects().isEmpty()) {
+        qCritical() << "No root objects loaded";
+        return -1;
     }
+
+    // ==================== Log Startup Complete ====================
+    LOG_INFO("Application started successfully");
     
-    // ==================== START EVENT LOOP ====================
-    
+    qDebug() << "==========================================";
+    qDebug() << App::Info::NAME << "v" << App::Info::VERSION;
+    qDebug() << "==========================================";
+
     return app.exec();
 }

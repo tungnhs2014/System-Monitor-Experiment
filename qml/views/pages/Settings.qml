@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/pages/Settings.qml
+ * File: qml/views/pages/Settings.qml
  * Description: Settings page with 4 tabs
  * ============================================
  */
@@ -168,26 +168,16 @@ Rectangle {
 
                 Button {
                     text: "Reboot"
-                    buttonColor: "#FF9800"  // Orange
-                    width: 90
-                    height: 26
-                    onClicked: {
-                        console.log("Reboot requested")
-                        // TODO: Show confirmation dialog
-                        systemInfo.reboot()
-                    }
+                    width: 100
+                    color: "#FF9800"
+                    onClicked: rebootDialog.show()
                 }
 
                 Button {
                     text: "Shutdown"
-                    buttonColor: "#F44336"  // Red
-                    width: 90
-                    height: 26
-                    onClicked: {
-                        console.log("Shutdown requested")
-                        // TODO: Show confirmation dialog
-                        systemInfo.shutdown()
-                    }
+                    width: 100
+                    color: "#F44336"
+                    onClicked: shutdownDialog.show()
                 }
             }
         }
@@ -309,16 +299,15 @@ Rectangle {
                     font.hintingPreference: Font.PreferFullHinting
                 }
 
-                InputField {
-                    id: cpuWarnInput
+                SpinBox {
+                    width: 90
                     value: systemInfo.cpuWarnThreshold
                     minValue: 50
                     maxValue: 95
+                    step: 5
                     suffix: "%"
-                    onValueChanged: {
-                        systemInfo.cpuWarnThreshold = cpuWarnInput.value
-                        console.log("CPU warning threshold:", cpuWarnInput.value)
-                    }
+                    anchors.verticalCenter: parent.verticalCenter
+                    onValueChanged: systemInfo.cpuWarnThreshold = value
                 }
             }
 
@@ -326,7 +315,7 @@ Rectangle {
             Row {
                 width: parent.width
                 spacing: 10
-                
+
                 Text {
                     text: "CPU Critical:"
                     font.family: "DejaVu Sans"
@@ -338,17 +327,16 @@ Rectangle {
                     antialiasing: false
                     font.hintingPreference: Font.PreferFullHinting
                 }
-                
-                InputField {
-                    id: cpuCritInput
+
+                SpinBox {
+                    width: 90
                     value: systemInfo.cpuCritThreshold
-                    minValue: 50
-                    maxValue: 95
+                    minValue: 60
+                    maxValue: 100
+                    step: 5
                     suffix: "%"
-                    onValueChanged: {
-                        systemInfo.cpuCritThreshold = cpuCritInput.value
-                        console.log("CPU critical threshold:", cpuCritInput.value)
-                    }
+                    anchors.verticalCenter: parent.verticalCenter
+                    onValueChanged: systemInfo.cpuCritThreshold = value
                 }
             }
 
@@ -356,7 +344,7 @@ Rectangle {
             Row {
                 width: parent.width
                 spacing: 10
-                
+
                 Text {
                     text: "RAM Warning:"
                     font.family: "DejaVu Sans"
@@ -368,17 +356,16 @@ Rectangle {
                     antialiasing: false
                     font.hintingPreference: Font.PreferFullHinting
                 }
-                
-                InputField {
-                    id: ramWarnInput
+
+                SpinBox {
+                    width: 90
                     value: systemInfo.ramWarnThreshold
                     minValue: 50
                     maxValue: 95
+                    step: 5
                     suffix: "%"
-                    onValueChanged: {
-                        systemInfo.ramWarnThreshold = ramWarnInput.value
-                        console.log("RAM warning threshold:", ramWarnInput.value)
-                    }
+                    anchors.verticalCenter: parent.verticalCenter
+                    onValueChanged: systemInfo.ramWarnThreshold = value
                 }
             }
         }
@@ -515,6 +502,32 @@ Rectangle {
 
             // Show success feedback (could add toast/snackbar)
             console.log("Settings saved successfully!")
+        }
+    }
+
+    // ==================== CONFIRMATION DIALOGS ====================
+    
+    ConfirmDialog {
+        id: rebootDialog
+        title: "Reboot System"
+        message: "Are you sure you want to reboot?\nAll unsaved data will be lost."
+        confirmText: "Reboot"
+        confirmColor: "#FF9800"
+        
+        onAccepted: {
+            systemInfo.reboot()
+        }
+    }
+    
+    ConfirmDialog {
+        id: shutdownDialog
+        title: "Shutdown System"
+        message: "Are you sure you want to shutdown?\nThe system will power off."
+        confirmText: "Shutdown"
+        confirmColor: "#F44336"
+        
+        onAccepted: {
+            systemInfo.shutdown()
         }
     }
 

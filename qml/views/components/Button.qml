@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/Button.qml
+ * File: qml/views/components/Button.qml
  * Description: Reusable button component
  * ============================================
  */

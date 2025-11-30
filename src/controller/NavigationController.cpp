@@ -38,7 +38,6 @@ void NavigationController::navigateTo(int index)
 void NavigationController::goBack()
 {
     if (m_previousIndex >= 0) {
-        int temp = m_currentIndex;
         m_currentIndex = m_previousIndex;
         m_previousIndex = -1;  // Clear history after going back
         m_currentPage = indexToPageName(m_currentIndex);

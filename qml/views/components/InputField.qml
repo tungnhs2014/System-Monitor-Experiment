@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/InputField.qml
+ * File: qml/views/components/InputField.qml
  * Description: Number input field component
  * ============================================
  */

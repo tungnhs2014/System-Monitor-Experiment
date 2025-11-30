@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/pages/MemoryDetail.qml
+ * File: qml/views/pages/MemoryDetail.qml
  * Description: Memory detail page with large circular gauge
  * ============================================
  */

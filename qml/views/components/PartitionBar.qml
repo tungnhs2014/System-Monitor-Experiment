@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/PartitionBar.qml
+ * File: qml/views/components/PartitionBar.qml
  * Description: Storage partition usage bar with details
  * ============================================
  */

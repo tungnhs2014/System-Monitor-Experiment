@@ -1,5 +1,5 @@
 /*
- * File: qml/components/TopBar.qml
+ * File: qml/views/omponents/TopBar.qml
  */
 
 import QtQuick 2.15

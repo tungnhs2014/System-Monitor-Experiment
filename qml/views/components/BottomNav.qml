@@ -1,5 +1,5 @@
 /*
- * File: qml/components/BottomNav.qml
+ * File: qml/views/components/BottomNav.qml
  */
 
 import QtQuick 2.15
@@ -41,13 +41,13 @@ Rectangle {
         }
 
         NavButton {
-            icon: "🌐"
+            icon: "💿"
             active: root.currentIndex === 3
             onClicked: root.currentIndex = 3
         }
 
         NavButton {
-            icon: "🖥️"
+            icon: "🌐"  
             active: root.currentIndex === 4
             onClicked: root.currentIndex = 4
         }

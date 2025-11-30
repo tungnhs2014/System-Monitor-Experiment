@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/DetailHeader.qml
+ * File: qml/views/components/DetailHeader.qml
  * Description: Reusable header for detail pages
  * ============================================
  */

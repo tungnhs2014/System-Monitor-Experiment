@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/TabBar.qml
+ * File: qml/views/components/TabBar.qml
  * Description: Horizontal tab bar with 4 tabs
  * ============================================
  */

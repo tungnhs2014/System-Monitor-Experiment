@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/CircularGauge.qml
+ * File: qml/views/components/CircularGauge.qml
  * Description: Circular gauge
  * ============================================
  */

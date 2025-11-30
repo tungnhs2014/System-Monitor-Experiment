@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/LineChart.qml
+ * File: qml/views/components/LineChart.qml
  * Description: Reusable line chart component using Canvas API
  * ============================================
  */

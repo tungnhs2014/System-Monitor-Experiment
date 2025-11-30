@@ -1,12 +1,11 @@
 /*
  * ============================================
- * File: qml/components/ToggleSwitch.qml
+ * File: qml/views/components/ToggleSwitch.qml
  * Description: ON/OFF toggle switch component
  * ============================================
  */
 
 import QtQuick 2.15
-// import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -71,22 +70,7 @@ Item {
                 easing.type: Easing.InOutCubic
             }
         }
-
-        // Shadow effect (subtle)
-        // layer.enabled: true
-        // layer.effect: DropShadow {
-        //     transparentBorder: true
-        //     horizontalOffset: 1
-        //     verticalOffset: 1
-        //     radius: 2
-        //     samples: 5
-        //     color: Qt.rgba(0, 0, 0, 0.3)
-        // }
     }
-
-    // Import for DropShadow
-    // (Note: In real implementation, add: import QtGraphicalEffects 1.15)
-    // For simplicity, shadow is optional - comment out layer.effect if not available
 
     // ==================== CLICK AREA ====================
 

@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/pages/NetworkDetail.qml
+ * File: qml/views/pages/NetworkDetail.qml
  * Description: Network detail with dual-line chart and stats
  * ============================================
  *

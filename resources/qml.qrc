@@ -25,5 +25,7 @@
         <file alias="qml/views/components/ToggleSwitch.qml">../qml/views/components/ToggleSwitch.qml</file>
         <file alias="qml/views/components/InputField.qml">../qml/views/components/InputField.qml</file>
         <file alias="qml/views/components/Button.qml">../qml/views/components/Button.qml</file>
+        <file alias="qml/views/components/SpinBox.qml">../qml/views/components/SpinBox.qml</file>
+        <file alias="qml/views/components/ConfirmDialog.qml">../qml/views/components/ConfirmDialog.qml</file>
     </qresource>
 </RCC>

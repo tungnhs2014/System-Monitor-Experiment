@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/pages/StorageDetail.qml
+ * File: qml/views/pages/StorageDetail.qml
  * Description: Storage detail with partitions and I/O stats
  * ============================================
  */

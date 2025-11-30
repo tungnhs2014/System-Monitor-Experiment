@@ -1,7 +1,7 @@
 /*
  * ============================================
- * File: qml/Main.qml (UPDATED - Full Navigation)
- * Description: Root window with complete StackView navigation
+ * File: qml/Main.qml 
+ * Description: Root window with StackView navigation
  * ============================================
  *
  * PAGES:

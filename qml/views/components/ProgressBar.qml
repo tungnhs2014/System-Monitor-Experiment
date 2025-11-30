@@ -1,5 +1,5 @@
 /*
- * File: qml/components/ProgressBar.qml
+ * File: qml/views/components/ProgressBar.qml
  */
 
 import QtQuick 2.15

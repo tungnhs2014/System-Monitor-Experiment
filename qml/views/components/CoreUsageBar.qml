@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/components/CoreUsageBar.qml
+ * File: qml/views/components/CoreUsageBar.qml
  * Description: Individual CPU core usage bar with label
  * ============================================
  */

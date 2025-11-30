@@ -1,6 +1,6 @@
 /*
  * ============================================
- * File: qml/pages/CpuDetail.qml
+ * File: qml/views/pages/CpuDetail.qml
  * Description: CPU detail page with temp chart and core usage
  * ============================================
  */

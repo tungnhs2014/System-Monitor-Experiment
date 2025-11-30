@@ -1,7 +1,6 @@
 /*
  * ============================================
- * File: qml/pages/Dashboard.qml
- * ULTIMATE VERSION - Perfect RGB565 Rendering
+ * File: qml/views/pages/Dashboard.qml
  * ============================================
  */
 
@@ -13,7 +12,7 @@ Rectangle {
 
     width: 320
     height: 240
-    color: "#0A0E14"  // Dark blue-gray (RGB565-safe)
+    color: "#0A0E14"  
 
     // ==================== SIGNALS FOR NAVIGATION ====================
     signal navigationRequested(int index)
