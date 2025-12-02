@@ -1,12 +1,13 @@
 /*
  * ============================================
  * File: qml/views/pages/Settings.qml
- * Description: Settings page with 4 tabs
+ * Description: Settings page
  * ============================================
  */
 
 import QtQuick 2.15
 import "../components"
+import ".." as Root
 
 Rectangle {
     id: root
@@ -21,26 +22,19 @@ Rectangle {
     signal backRequested()
     signal settingsRequested()
 
-    // ==================== MOCK DATA ====================
-    
-    // System tab
     property string mockHostname: "raspberrypi"
     property string mockOsVersion: "Raspberry Pi OS"
     property string mockKernel: "Linux 5.10.103"
     property string mockUptime: "3d 4h 15m 30s"
     property string mockSystemTime: "03:00:48 [NTP]"
 
-    // Monitor tab
     property int mockUpdateInterval: 2
-    property bool mockDarkMode: true
     property bool mockSoundAlert: false
 
-    // Warning tab
     property int mockCpuWarn: 70
     property int mockCpuCrit: 90
     property int mockRamWarn: 75
 
-    // Logs tab 
     property var mockLogs: [
         {time: "03:00:45", level: "INFO", message: "System monitor started"},
         {time: "03:00:46", level: "INFO", message: "Network connected: eth0"},
@@ -58,14 +52,8 @@ Rectangle {
             right: parent.right
         }
         title: "SETTINGS"
-
-        onBackClicked: {
-            root.backRequested()
-        }
-
-        onSettingsClicked: {
-            // Already in Settings, do nothing
-        }
+        onBackClicked: root.backRequested()
+        onSettingsClicked: {}
     }
 
     // ==================== TAB BAR ====================
@@ -81,7 +69,7 @@ Rectangle {
         currentIndex: 0
 
         onTabClicked: function(index) {
-            console.log("Tab switched to:", tabs[index])
+            if (QML_DEBUG_ENABLED) console.log("Tab switched to:", tabs[index])
         }
     }
 
@@ -99,84 +87,40 @@ Rectangle {
 
         // ==================== TAB 1: SYSTEM INFO ====================
         
-        Column {
+        Flickable {
             anchors.fill: parent
-            spacing: 8
+            contentHeight: systemColumn.height
+            clip: true
             visible: tabBar.currentIndex === 0
-
-            // System info card
-            Rectangle {
-                width: parent.width
-                height: 100
-                color: "#1E2539"
-                radius: 8
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.1)
-
-                Column {
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        top: parent.top
-                        margins: 10
-                    }
-                    spacing: 6
-                    // Info rows
-                    Repeater {
-                        model: [
-                            {label: "Hostname:", value: systemInfo.hostname},
-                            {label: "OS Version:", value: systemInfo.osVersion},
-                            {label: "Kernel:", value: systemInfo.kernelVersion},
-                            {label: "Uptime:", value: systemInfo.uptime},
-                            {label: "System Time:", value: systemInfo.systemTime}
-                        ]
-
-                        Row {
-                            spacing: 8
-
-                            Text {
-                                text: modelData.label
-                                font.family: "DejaVu Sans"
-                                font.pixelSize: 8
-                                font.bold: true
-                                color: "#B0B8C8"
-                                width: 80
-                                renderType: Text.NativeRendering
-                                antialiasing: false
-                                font.hintingPreference: Font.PreferFullHinting
-                            }
-                            
-                            Text {
-                                text: modelData.value
-                                font.family: "DejaVu Sans"
-                                font.pixelSize: 8
-                                font.bold: true
-                                color: "#FFFFFF"
-                                renderType: Text.NativeRendering
-                                antialiasing: false
-                                font.hintingPreference: Font.PreferFullHinting
-                            }
-                        }
-                    }
-                }
-            }
-
-            // System control buttons
-            Row{
-                anchors.horizontalCenter: parent.horizontalCenter
+            
+            Column {
+                id: systemColumn
+                width: parent.parent.width
                 spacing: 10
 
+                InfoRow { label: "Hostname:"; value: systemInfo.hostname }
+                InfoRow { label: "OS Version:"; value: systemInfo.osVersion }
+                InfoRow { label: "Kernel:"; value: systemInfo.kernelVersion }
+                InfoRow { label: "Uptime:"; value: systemInfo.uptime }
+                InfoRow { label: "System Time:"; value: systemInfo.systemTime }
+
+                Item { height: 10 }
+
                 Button {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 140
+                    height: 28
                     text: "Reboot"
-                    width: 100
-                    color: "#FF9800"
+                    buttonColor: "#FF9800"
                     onClicked: rebootDialog.show()
                 }
 
                 Button {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 140
+                    height: 28
                     text: "Shutdown"
-                    width: 100
-                    color: "#F44336"
+                    buttonColor: "#F44336"
                     onClicked: shutdownDialog.show()
                 }
             }
@@ -240,233 +184,201 @@ Rectangle {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: {
-                            console.log("Update interval dropdown clicked")
-                            // TODO: Show dropdown menu
-                        }
+                        onClicked: if (QML_DEBUG_ENABLED) console.log("Update interval dropdown clicked")
                     }
                 }
             }
 
-            // Dark mode toggle
-            Row {
-                width: parent.width
-                spacing: 10
-
-                Text {
-                    text: "Dark Mode:"
-                    font.family: "DejaVu Sans"
-                    font.pixelSize: 9
-                    color: "#FFFFFF"
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 100
-                    renderType: Text.NativeRendering
-                    antialiasing: false
-                    font.hintingPreference: Font.PreferFullHinting
-                }
-
-                ToggleSwitch {
-                    checked: systemInfo.darkMode
-                    onToggled: function(state) {
-                        systemInfo.darkMode = state
-                        console.log("Dark mode:", state ? "ON" : "OFF")
-                    }
-                }
-            }
+            // Removed Dark Mode toggle
         }
-        
+
         // ==================== TAB 3: WARNING THRESHOLDS ====================
-        
-        Column {
+
+        Flickable {
             anchors.fill: parent
-            spacing: 12
+            contentHeight: warningColumn.height
+            clip: true
             visible: tabBar.currentIndex === 2
-
-            // CPU warning
-            Row {
-                width: parent.width
-                spacing: 10
-
-                Text {
-                    text: "CPU Warning:"
-                    font.family: "DejaVu Sans"
-                    font.pixelSize: 9
-                    color: "#FFFFFF"
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 100
-                    renderType: Text.NativeRendering
-                    antialiasing: false
-                    font.hintingPreference: Font.PreferFullHinting
-                }
-
-                SpinBox {
-                    width: 90
-                    value: systemInfo.cpuWarnThreshold
-                    minValue: 50
-                    maxValue: 95
-                    step: 5
-                    suffix: "%"
-                    anchors.verticalCenter: parent.verticalCenter
-                    onValueChanged: systemInfo.cpuWarnThreshold = value
-                }
-            }
-
-            // CPU critical
-            Row {
-                width: parent.width
-                spacing: 10
+            
+            Column {
+                id: warningColumn
+                width: parent.parent.width
+                spacing: 12
 
                 Text {
-                    text: "CPU Critical:"
+                    text: "CPU Thresholds"
                     font.family: "DejaVu Sans"
-                    font.pixelSize: 9
+                    font.pixelSize: 10
+                    font.bold: true
                     color: "#FFFFFF"
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 100
                     renderType: Text.NativeRendering
-                    antialiasing: false
-                    font.hintingPreference: Font.PreferFullHinting
                 }
 
-                SpinBox {
-                    width: 90
-                    value: systemInfo.cpuCritThreshold
-                    minValue: 60
-                    maxValue: 100
-                    step: 5
-                    suffix: "%"
-                    anchors.verticalCenter: parent.verticalCenter
-                    onValueChanged: systemInfo.cpuCritThreshold = value
-                }
-            }
+                Row {
+                    width: parent.width
+                    spacing: 10
 
-            // RAM warning
-            Row {
-                width: parent.width
-                spacing: 10
+                    Text {
+                        text: "Warning:"
+                        font.family: "DejaVu Sans"
+                        font.pixelSize: 9
+                        color: "#FFFFFF"
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 70
+                        renderType: Text.NativeRendering
+                    }
+
+                    SpinBox {
+                        value: systemInfo.cpuWarnThreshold
+                        minValue: 50
+                        maxValue: 95
+                        step: 5
+                        suffix: "%"
+                        anchors.verticalCenter: parent.verticalCenter
+                        onValueChanged: systemInfo.cpuWarnThreshold = value
+                    }
+                }
+
+                // CPU critical
+                Row {
+                    width: parent.width
+                    spacing: 10
+
+                    Text {
+                        text: "Critical:"
+                        font.family: "DejaVu Sans"
+                        font.pixelSize: 9
+                        color: "#FFFFFF"
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 70
+                        renderType: Text.NativeRendering
+                    }
+
+                    SpinBox {
+                        value: systemInfo.cpuCritThreshold
+                        minValue: 60
+                        maxValue: 100
+                        step: 5
+                        suffix: "%"
+                        anchors.verticalCenter: parent.verticalCenter
+                        onValueChanged: systemInfo.cpuCritThreshold = value
+                    }
+                }
+
+                Item { height: 8 }
 
                 Text {
-                    text: "RAM Warning:"
+                    text: "RAM Thresholds"
                     font.family: "DejaVu Sans"
-                    font.pixelSize: 9
+                    font.pixelSize: 10
+                    font.bold: true
                     color: "#FFFFFF"
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 100
                     renderType: Text.NativeRendering
-                    antialiasing: false
-                    font.hintingPreference: Font.PreferFullHinting
                 }
 
-                SpinBox {
-                    width: 90
-                    value: systemInfo.ramWarnThreshold
-                    minValue: 50
-                    maxValue: 95
-                    step: 5
-                    suffix: "%"
-                    anchors.verticalCenter: parent.verticalCenter
-                    onValueChanged: systemInfo.ramWarnThreshold = value
+                Row {
+                    width: parent.width
+                    spacing: 10
+
+                    Text {
+                        text: "Warning:"
+                        font.family: "DejaVu Sans"
+                        font.pixelSize: 9
+                        color: "#FFFFFF"
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 70
+                        renderType: Text.NativeRendering
+                    }
+
+                    SpinBox {
+                        value: systemInfo.ramWarnThreshold
+                        minValue: 50
+                        maxValue: 95
+                        step: 5
+                        suffix: "%"
+                        anchors.verticalCenter: parent.verticalCenter
+                        onValueChanged: systemInfo.ramWarnThreshold = value
+                    }
                 }
             }
         }
 
         // ==================== TAB 4: SYSTEM LOGS ====================
 
-        Rectangle {
+        Column {
             anchors.fill: parent
+            spacing: 4
             visible: tabBar.currentIndex === 3
-            color: "#1E2539"
-            radius: 8
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.1)
+
+            Text {
+                text: "Recent System Logs"
+                font.family: "DejaVu Sans"
+                font.pixelSize: 10
+                font.bold: true
+                color: "#FFFFFF"
+                renderType: Text.NativeRendering
+            }
 
             ListView {
-                id: logListView
-                anchors {
-                    fill: parent
-                    margins: 6
-                }
+                width: parent.width
+                height: parent.height - 20
                 clip: true
-                spacing: 4
                 model: systemInfo.systemLogs
 
-                delegate: Row {
-                    spacing: 6
+                delegate: Rectangle {
+                    width: ListView.view.width
+                    height: 18
+                    color: index % 2 === 0 ? "#1E2539" : "#0F1419"
 
-                    // Time
-                    Text {
-                        text: modelData.time
-                        font.family: "DejaVu Sans"
-                        font.pixelSize: 7
-                        color: "#B0B8C8"
-                        width: 50
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        font.hintingPreference: Font.PreferFullHinting
-                    }
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 4
+                        spacing: 6
 
-                    // Level
-                    Rectangle {
-                        width: 36
-                        height: 12
-                        radius: 3
-                        color: {
-                            if (modelData.level == "ERROR") return "#F44336"
-                            if (modelData.level === "WARN") return "#FF9800"
-                            return "#2196F3" // INFO
+                        Text {
+                            text: modelData.time
+                            font.family: "DejaVu Sans Mono"
+                            font.pixelSize: 7
+                            color: "#B0B8C8"
+                            anchors.verticalCenter: parent.verticalCenter
+                            renderType: Text.NativeRendering
+                        }
+
+                        Rectangle {
+                            width: 32
+                            height: 12
+                            radius: 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: {
+                                switch(modelData.level) {
+                                    case "ERROR": return "#F44336"
+                                    case "WARN": return "#FF9800"
+                                    case "INFO": return "#4CAF50"
+                                    default: return "#2196F3"
+                                }
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.level
+                                font.family: "DejaVu Sans"
+                                font.pixelSize: 6
+                                font.bold: true
+                                color: "#FFFFFF"
+                                renderType: Text.NativeRendering
+                            }
                         }
 
                         Text {
-                            anchors.centerIn: parent
-                            text: modelData.level
+                            text: modelData.message
                             font.family: "DejaVu Sans"
-                            font.pixelSize: 6
-                            font.bold: true
+                            font.pixelSize: 7
                             color: "#FFFFFF"
+                            anchors.verticalCenter: parent.verticalCenter
                             renderType: Text.NativeRendering
-                            antialiasing: false
-                            font.hintingPreference: Font.PreferFullHinting
+                            elide: Text.ElideRight
+                            width: 180
                         }
-                    }
-
-                    // Message
-                    Text {
-                        text: modelData.message
-                        font.family: "DejaVu Sans"
-                        font.pixelSize: 7
-                        color: "#FFFFFF"
-                        width: 200
-                        wrapMode: Text.WordWrap
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        font.hintingPreference: Font.PreferFullHinting
-                    }
-                }
-
-                // Scrollbar indicator
-                Rectangle {
-                    anchors {
-                        right: parent.right
-                        top: parent.top
-                        bottom: parent.bottom
-                    }
-                    width: 3
-                    color: Qt.rgba(1, 1, 1, 0.1)
-                    radius: 1.5
-
-                    Rectangle {
-                        width: parent.width
-                        height: {
-                            var ratio = logListView.height / logListView.contentHeight
-                            return Math.max(parent.height * ratio, 20)
-                        }
-                        y: {
-                            var ratio = logListView.contentY / (logListView.contentHeight - logListView.height)
-                            return ratio * (parent.height - height)
-                        }
-                        color: "#2196F3"
-                        radius: 1.5
-                        visible: logListView.contentHeight > logListView.height
                     }
                 }
             }
@@ -483,52 +395,45 @@ Rectangle {
             bottomMargin: 8
         }
         width: 304
-        height: 30
+        height: 24
         text: "Save Changes"
         buttonColor: "#4CAF50"  // Green
         visible: tabBar.currentIndex !== 0  // Hide on System tab (index 0)
 
         onClicked: {
-            console.log("Saving settings...")
-            console.log("Update interval:", systemInfo.updateInterval)
-            console.log("Dark mode:", systemInfo.darkMode)
-            console.log("Sound alert:", systemInfo.soundAlert)
-            console.log("CPU warn:", systemInfo.cpuWarnThreshold)
-            console.log("CPU crit:", systemInfo.cpuCritThreshold)
-            console.log("RAM warn:", systemInfo.ramWarnThreshold)
+            if (QML_DEBUG_ENABLED) console.log("Saving settings...")
+            if (QML_DEBUG_ENABLED) console.log("Update interval:", systemInfo.updateInterval)
+            if (QML_DEBUG_ENABLED) console.log("Sound alert:", systemInfo.soundAlert)
+            if (QML_DEBUG_ENABLED) console.log("CPU warn:", systemInfo.cpuWarnThreshold)
+            if (QML_DEBUG_ENABLED) console.log("CPU crit:", systemInfo.cpuCritThreshold)
+            if (QML_DEBUG_ENABLED) console.log("RAM warn:", systemInfo.ramWarnThreshold)
 
             // Save to backend
             systemInfo.saveSettings()
 
             // Show success feedback (could add toast/snackbar)
-            console.log("Settings saved successfully!")
+            if (QML_DEBUG_ENABLED) console.log("Settings saved successfully!")
         }
     }
 
     // ==================== CONFIRMATION DIALOGS ====================
-    
+
     ConfirmDialog {
         id: rebootDialog
         title: "Reboot System"
         message: "Are you sure you want to reboot?\nAll unsaved data will be lost."
         confirmText: "Reboot"
         confirmColor: "#FF9800"
-        
-        onAccepted: {
-            systemInfo.reboot()
-        }
+        onAccepted: systemInfo.reboot()
     }
-    
+
     ConfirmDialog {
         id: shutdownDialog
         title: "Shutdown System"
         message: "Are you sure you want to shutdown?\nThe system will power off."
         confirmText: "Shutdown"
         confirmColor: "#F44336"
-        
-        onAccepted: {
-            systemInfo.shutdown()
-        }
+        onAccepted: systemInfo.shutdown()
     }
 
     // ==================== BOTTOM NAVIGATION ====================
@@ -539,5 +444,31 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         currentIndex: 0
+    }
+
+    // ==================== HELPER COMPONENTS ====================
+
+    component InfoRow: Row {
+        property string label: ""
+        property string value: ""
+        spacing: 8
+
+        Text {
+            text: label
+            font.family: "DejaVu Sans"
+            font.pixelSize: 9
+            color: "#B0B8C8"
+            width: 100
+            renderType: Text.NativeRendering
+        }
+
+        Text {
+            text: value
+            font.family: "DejaVu Sans"
+            font.pixelSize: 9
+            font.bold: true
+            color: "#FFFFFF"
+            renderType: Text.NativeRendering
+        }
     }
 }

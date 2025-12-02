@@ -12,7 +12,11 @@ Rectangle {
 
     property string currentTime: "03:01"
     property string hostname: "raspberrypi"
+    
+    // ADD: Settings signal
+    signal settingsClicked()
 
+    // Time display
     Text {
         x: 16
         y: 11
@@ -26,6 +30,7 @@ Rectangle {
         antialiasing: false
     }
 
+    // Timer to update time
     Timer {
         interval: 1000
         running: true
@@ -33,6 +38,7 @@ Rectangle {
         onTriggered: root.currentTime = Qt.formatTime(new Date(), "hh:mm")
     }
 
+    // Hostname display
     Text {
         anchors.centerIn: parent
         text: root.hostname
@@ -45,27 +51,34 @@ Rectangle {
         antialiasing: false
     }
 
-    Rectangle {
-        x: 285
-        y: 5
-        width: 20
-        height: 20
-        color: "transparent"
+    Item {
+        id: settingsButton
+        anchors {
+            right: parent.right
+            rightMargin: 8
+            verticalCenter: parent.verticalCenter
+        }
+        width: 44   
+        height: 44
 
-        Text {
+        Image {
+            id: settingsIcon
             anchors.centerIn: parent
-            text: "⚙"
-            font.family: "DejaVu Sans"
-            font.pixelSize: 16
-            font.hintingPreference: Font.PreferFullHinting
-            renderType: Text.NativeRendering
-            antialiasing: false
-            color: "#B0B8C8"
+            source: "qrc:/assets/icons/settings.png"
+            width: 20
+            height: 20
+            sourceSize: Qt.size(20, 20)
+            smooth: false
+            opacity: 1.0
         }
 
         MouseArea {
             anchors.fill: parent
-            onClicked: console.log("Settings clicked")
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.settingsClicked()  // Emit signal
+            onPressed: settingsIcon.opacity = 0.6
+            onReleased: settingsIcon.opacity = 1.0
+            onCanceled: settingsIcon.opacity = 1.0
         }
     }
 }

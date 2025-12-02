@@ -105,6 +105,16 @@ int main(int argc, char *argv[])
 #if LOG_LEVEL > LOG_LEVEL_OFF
     engine.rootContext()->setContextProperty("logger", &Logger::instance());
 #endif
+
+    // ==================== Configure QML Debug Logging ====================
+    // Enable debug logs in Debug builds, disable in Release for performance
+#ifdef QT_NO_DEBUG
+    // Release build - disable all QML console.log()
+    engine.rootContext()->setContextProperty("QML_DEBUG_ENABLED", false);
+#else
+    // Debug build - enable QML console.log()
+    engine.rootContext()->setContextProperty("QML_DEBUG_ENABLED", true);
+#endif
     
     // ==================== Load QML ====================
     const QUrl url(QStringLiteral("qrc:/qml/Main.qml"));

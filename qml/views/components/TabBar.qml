@@ -13,8 +13,8 @@ Rectangle {
     // ==================== PROPERTIES ====================
     
     width: 320
-    height: 20
-    color: "#1E2539"  
+    height: 44  
+    color: "#1E2539"
 
     property var tabs: ["Tab 1", "Tab 2", "Tab 3", "Tab 4"]
     property int currentIndex: 0
@@ -71,7 +71,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: modelData
                     font.family: "DejaVu Sans"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: index === root.currentIndex
                     color: index === root.currentIndex ? root.activeColor : root.inactiveColor
 
@@ -82,9 +82,7 @@ Rectangle {
 
                     // Smooth color transition
                     Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
+                        ColorAnimation { duration: 150 }
                     }
                 }
 
@@ -111,7 +109,7 @@ Rectangle {
             bottomMargin: 1
         }
         width: root.width / root.tabs.length
-        height: 2
+        height: 3
         color: root.indicatorColor
 
         // Position based on currentIndex

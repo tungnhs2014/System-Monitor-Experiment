@@ -21,42 +21,6 @@ Rectangle {
     signal settingsRequested()
     signal navigationRequested(int index)
 
-    // ==================== MOCK DATA ====================
-    property int mocCpuUsage: 57
-    property int mockCpuTemp: 69
-    property string mockCpuClock: "4.8G"
-
-    // Temperature history (40 data points for smooth chart)
-    property var mockTempHistory: [
-        65, 67, 66, 68, 67, 69, 68, 70, 69, 71,
-        70, 69, 68, 70, 71, 69, 72, 70, 71, 69,
-        70, 72, 71, 70, 69, 71, 70, 72, 71, 73,
-        72, 71, 70, 69, 71, 70, 69, 68, 70, 69
-    ]
-
-    // Per-core usage (4 cores)
-    property var mockCoreUsages: [57, 62, 45,72]
-
-    // ==================== DEBUG ====================
-    Component.onCompleted: {
-        console.log("=== CpuDetail DEBUG ===")
-        console.log("CPU Usage:", systemInfo.cpuUsage)
-        console.log("CPU Temp:", systemInfo.cpuTemp)
-        console.log("CPU Clock:", systemInfo.cpuClock)
-        console.log("Core Usages:", JSON.stringify(systemInfo.coreUsages))
-        console.log("Temp History length:", systemInfo.tempHistory.length)
-    }
-
-    Connections {
-        target: systemInfo
-        function onCoreUsagesChanged() {
-            console.log("Core usages updated:", JSON.stringify(systemInfo.coreUsages))
-        }
-        function onTempHistoryChanged() {
-            console.log("Temp history updated, length:", systemInfo.tempHistory.length)
-        }
-    }
-
     // ==================== HEADER ====================
     DetailHeader {
         id: header
@@ -67,13 +31,8 @@ Rectangle {
         }
         title: "CPU"
 
-        onBackClicked: {
-            root.backRequested()
-        }
-
-        onSettingsClicked: {
-            root.settingsRequested()
-        }
+        onBackClicked: root.backRequested()
+        onSettingsClicked: root.settingsRequested()
     }
 
     // ==================== CONTENT AREA ====================
@@ -84,8 +43,8 @@ Rectangle {
             top: header.bottom
             left: parent.left
             right: parent.right
-            bottom: bottomNav.top
-            bottomMargin: 12
+            bottom: parent.bottom
+            bottomMargin: 55
         }
 
         // ==================== TEMPERATURE CHART CARD ====================
@@ -99,8 +58,8 @@ Rectangle {
             }
             width: 304
             height: 80
+            radius: 6
             color: "#1E2539"
-            radius: 8
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.1)
 
@@ -109,74 +68,73 @@ Rectangle {
                 anchors.margins: 8
                 spacing: 4
 
-                // Temperature label
-                Text {
-                    text: "TEMP" + systemInfo.cpuTemp + "°C"
-                    font.family: "DejaVu Sans"
-                    font.pixelSize: 10
-                    font.bold: true
-                    color: systemInfo.cpuTemp > 80 ? "#FF9800" : "#4CAF50"
-                    renderType: Text.NativeRendering
-                    antialiasing: false
-                    font.hintingPreference: Font.PreferFullHinting
+                Row {
+                    spacing: 4
+                    Image {
+                        source: "qrc:/assets/icons/thermometer.png"
+                        width: 12
+                        height: 12
+                        sourceSize: Qt.size(12, 12)
+                        smooth: false
+                    }
+                    Text {
+                        text: "Temperature History"
+                        font.family: "DejaVu Sans"
+                        font.pixelSize: 10
+                        font.bold: true
+                        color: "#FFFFFF"
+                        renderType: Text.NativeRendering
+                    }
                 }
 
-                // Line chart
                 LineChart {
-                    width: 288
-                    height: 45
+                    width: parent.width
+                    height: 50
                     dataPoints: systemInfo.tempHistory
-                    lineColor: "#4CAF50" // Green for temp
-                    minValue: 60
-                    maxValue: 80
-                    smoothLine: true
-                }
-
-                // Load and clock info
-                Text {
-                    text: "Load " + systemInfo.cpuUsage + "% | Clock: " + systemInfo.cpuClock
-                    font.family: "DejaVu Sans"
-                    font.pixelSize: 10;
-                    color: "#B0B8C8"
-                    renderType: Text.NativeRendering
-                    antialiasing: false
-                    font.hintingPreference: Font.PreferFullHinting
+                    maxValue: 100
+                    lineColor: "#FF5722"
                 }
             }   
         }
 
-        // ==================== CORE USAGE SECTION ====================
+        // ==================== CORE USAGE BARS ====================
 
-        Column {
-            id: coreSection
+        Rectangle {
+            id: coresCard
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 top: chartCard.bottom
                 topMargin: 8
             }
             width: 304
-            spacing: 4
+            height: 86
+            radius: 6
+            color: "#1E2539"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.1)
 
-            // "Core Usage" label
-            Text {
-                text: "Core Usage:"
-                font.family: "DejaVu Sans"
-                font.pixelSize: 10
-                font.bold: true
-                color: "#B0B8C8"
-                renderType: Text.NativeRendering
-                antialiasing: false
-                font.hintingPreference: Font.PreferFullHinting
-            }
+            Column {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 4
 
-            // Core bars (4 cores)
-            Repeater {
-                model: systemInfo.coreUsages
+                Text {
+                    text: "Per-Core Usage"
+                    font.family: "DejaVu Sans"
+                    font.pixelSize: 10
+                    font.bold: true
+                    color: "#FFFFFF"
+                    renderType: Text.NativeRendering
+                }
 
-                CoreUsageBar {
-                    width: 304
-                    coreIndex: index
-                    usage: modelData
+                Repeater {
+                    model: systemInfo.coreUsages
+
+                    CoreUsageBar {
+                        width: 288
+                        coreIndex: index
+                        usage: modelData
+                    }
                 }
             }
         }
@@ -189,9 +147,8 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        currentIndex: 1  // CPU tab (index 1)
+        currentIndex: 1 
 
-        // Forward navigation signal to Main.qml
         onNavigationRequested: function(index) {
             root.navigationRequested(index)
         }

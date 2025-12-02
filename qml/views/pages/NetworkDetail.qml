@@ -8,6 +8,7 @@
 
 import QtQuick 2.15
 import "../components"
+import ".." as Root
 
 Rectangle {
     id: root
@@ -52,21 +53,21 @@ Rectangle {
 
     // ==================== DEBUG ====================
     Component.onCompleted: {
-        console.log("=== NetworkDetail DEBUG ===")
-        console.log("Interface:", systemInfo.networkInterface)
-        console.log("IP:", systemInfo.ipAddress)
-        console.log("MAC:", systemInfo.macAddress)
-        console.log("Upload history length:", systemInfo.netUpHistory.length)
-        console.log("Download history length:", systemInfo.netDownHistory.length)
+        if (QML_DEBUG_ENABLED) console.log("=== NetworkDetail DEBUG ===")
+        if (QML_DEBUG_ENABLED) console.log("Interface:", systemInfo.networkInterface)
+        if (QML_DEBUG_ENABLED) console.log("IP:", systemInfo.ipAddress)
+        if (QML_DEBUG_ENABLED) console.log("MAC:", systemInfo.macAddress)
+        if (QML_DEBUG_ENABLED) console.log("Upload history length:", systemInfo.netUpHistory.length)
+        if (QML_DEBUG_ENABLED) console.log("Download history length:", systemInfo.netDownHistory.length)
     }
 
     Connections {
         target: systemInfo
         function onNetUpHistoryChanged() {
-            console.log("Upload history updated, length:", systemInfo.netUpHistory.length)
+            if (QML_DEBUG_ENABLED) console.log("Upload history updated, length:", systemInfo.netUpHistory.length)
         }
         function onNetDownHistoryChanged() {
-            console.log("Download history updated, length:", systemInfo.netDownHistory.length)
+            if (QML_DEBUG_ENABLED) console.log("Download history updated, length:", systemInfo.netDownHistory.length)
         }
     }
 
@@ -98,7 +99,7 @@ Rectangle {
             left: parent.left
             right: parent.right
             bottom: bottomNav.top
-            bottomMargin: 12
+            bottomMargin: 55
         }
 
         // ==================== NETWORK INFO CARD ====================

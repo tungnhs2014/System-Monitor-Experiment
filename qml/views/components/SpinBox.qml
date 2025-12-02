@@ -8,15 +8,11 @@
 
 import QtQuick 2.15
 
-Rectangle {
+Item {
     id: root
     
-    width: 100
-    height: 28
-    radius: 4
-    color: "#1E2539"
-    border.width: 1
-    border.color: Qt.rgba(1, 1, 1, 0.2)
+    width: 140  
+    height: 44 
     
     // Properties
     property int value: 70
@@ -30,20 +26,29 @@ Rectangle {
     
     Row {
         anchors.fill: parent
+        spacing: 0
         
         // ==================== MINUS BUTTON ====================
         Rectangle {
             id: minusBtn
-            width: 28
-            height: parent.height
+            width: 44   
+            height: 44  
             radius: 4
-            color: minusArea.pressed ? "#2196F3" : 
-                   (minusArea.containsMouse ? "#2A3548" : "transparent")
+            color: "#1E2539"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.2)
+            
+            Rectangle {
+                anchors.fill: parent
+                radius: 4
+                color: minusArea.pressed ? "#2196F3" : 
+                       (minusArea.containsMouse ? "#2A3548" : "transparent")
+            }
             
             Text {
                 anchors.centerIn: parent
                 text: "−"
-                font.pixelSize: 16
+                font.pixelSize: 20 
                 font.bold: true
                 font.family: "DejaVu Sans"
                 color: root.value > root.minValue && root.enabled ? "#FFFFFF" : "#4A5568"
@@ -70,15 +75,19 @@ Rectangle {
         }
         
         // ==================== VALUE DISPLAY ====================
-        Item {
-            width: parent.width - 56
-            height: parent.height
+        Rectangle {
+            width: 52  // Fixed width for value
+            height: 44
+            radius: 4
+            color: "#1E2539"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.2)
             
             Text {
                 anchors.centerIn: parent
                 text: root.value + root.suffix
                 font.family: "DejaVu Sans"
-                font.pixelSize: 12
+                font.pixelSize: 13 
                 font.bold: true
                 font.hintingPreference: Font.PreferFullHinting
                 color: root.enabled ? "#FFFFFF" : "#4A5568"
@@ -90,16 +99,24 @@ Rectangle {
         // ==================== PLUS BUTTON ====================
         Rectangle {
             id: plusBtn
-            width: 28
-            height: parent.height
+            width: 44   
+            height: 44 
             radius: 4
-            color: plusArea.pressed ? "#2196F3" : 
-                   (plusArea.containsMouse ? "#2A3548" : "transparent")
+            color: "#1E2539"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.2)
+            
+            Rectangle {
+                anchors.fill: parent
+                radius: 4
+                color: plusArea.pressed ? "#2196F3" : 
+                       (plusArea.containsMouse ? "#2A3548" : "transparent")
+            }
             
             Text {
                 anchors.centerIn: parent
                 text: "+"
-                font.pixelSize: 16
+                font.pixelSize: 20 
                 font.bold: true
                 font.family: "DejaVu Sans"
                 color: root.value < root.maxValue && root.enabled ? "#FFFFFF" : "#4A5568"

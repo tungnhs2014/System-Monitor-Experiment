@@ -75,7 +75,7 @@ Rectangle {
             left: parent.left
             right: parent.right
             bottom: bottomNav.top
-            bottomMargin: 12
+            bottomMargin: 55
         }
 
         Column {
@@ -189,5 +189,4 @@ Rectangle {
             root.navigationRequested(index)
         }
     }
-
 }

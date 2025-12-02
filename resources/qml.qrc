@@ -3,6 +3,10 @@
         <!-- Main QML -->
         <file alias="qml/Main.qml">../qml/Main.qml</file>
 
+        <!-- Debug Singleton -->
+        <file alias="qml/Debug.qml">../qml/Debug.qml</file>
+        <file alias="qml/qmldir">../qml/qmldir</file>
+
         <!-- Pages -->
         <file alias="qml/views/pages/Dashboard.qml">../qml/views/pages/Dashboard.qml</file>
         <file alias="qml/views/pages/CpuDetail.qml">../qml/views/pages/CpuDetail.qml</file>
@@ -27,5 +31,20 @@
         <file alias="qml/views/components/Button.qml">../qml/views/components/Button.qml</file>
         <file alias="qml/views/components/SpinBox.qml">../qml/views/components/SpinBox.qml</file>
         <file alias="qml/views/components/ConfirmDialog.qml">../qml/views/components/ConfirmDialog.qml</file>
+
+        <file alias="assets/icons/home.png">../assets/icons/home.png</file>
+        <file alias="assets/icons/cpu.png">../assets/icons/cpu.png</file>
+        <file alias="assets/icons/gpu.png">../assets/icons/gpu.png</file>
+        <file alias="assets/icons/memory.png">../assets/icons/memory.png</file>
+        <file alias="assets/icons/hard-drive.png">../assets/icons/hard-drive.png</file>
+        <file alias="assets/icons/wifi.png">../assets/icons/wifi.png</file>
+        <file alias="assets/icons/settings.png">../assets/icons/settings.png</file>
+        <file alias="assets/icons/arrow-left.png">../assets/icons/arrow-left.png</file>
+        <file alias="assets/icons/thermometer.png">../assets/icons/thermometer.png</file>
+        <file alias="assets/icons/clock.png">../assets/icons/clock.png</file>
+        <file alias="assets/icons/calendar.png">../assets/icons/calendar.png</file>
+        <file alias="assets/icons/swap.png">../assets/icons/swap.png</file>
+        <file alias="assets/icons/database.png">../assets/icons/database.png</file>
+        <file alias="assets/icons/server.png">../assets/icons/server.png</file>
     </qresource>
 </RCC>

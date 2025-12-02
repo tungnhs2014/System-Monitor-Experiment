@@ -167,7 +167,9 @@ void Logger::rotateLogFile()
     
     // Open new file
     m_logFile.setFileName(m_logFilePath);
-    m_logFile.open(QIODevice::WriteOnly | QIODevice::Text);
+    if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open new log file:" << m_logFilePath;
+    }
 }
 
 void Logger::setLogToFile(bool enabled)

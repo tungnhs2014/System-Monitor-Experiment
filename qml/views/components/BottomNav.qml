@@ -23,31 +23,31 @@ Rectangle {
         spacing: 25
 
         NavButton {
-            icon: "🏠"
+            iconSource: "qrc:/assets/icons/home.png"
             active: root.currentIndex === 0
             onClicked: root.currentIndex = 0
         }
 
         NavButton {
-            icon: "📊"
+            iconSource: "qrc:/assets/icons/cpu.png"
             active: root.currentIndex === 1
             onClicked: root.currentIndex = 1
         }
 
         NavButton {
-            icon: "💾"
+            iconSource: "qrc:/assets/icons/memory.png"
             active: root.currentIndex === 2
             onClicked: root.currentIndex = 2
         }
 
         NavButton {
-            icon: "💿"
+            iconSource: "qrc:/assets/icons/hard-drive.png"
             active: root.currentIndex === 3
             onClicked: root.currentIndex = 3
         }
 
         NavButton {
-            icon: "🌐"  
+            iconSource: "qrc:/assets/icons/wifi.png"
             active: root.currentIndex === 4
             onClicked: root.currentIndex = 4
         }
@@ -57,7 +57,7 @@ Rectangle {
         width: 44
         height: 44
 
-        property string icon: ""
+        property string iconSource: ""
         property bool active: false
         signal clicked()
 
@@ -65,15 +65,14 @@ Rectangle {
             anchors.centerIn: parent
             spacing: 4
 
-            Text {
+            Image {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: icon
-                font.pixelSize: 24
-                font.hintingPreference: Font.PreferFullHinting
+                source: iconSource
+                width: 24
+                height: 24
+                sourceSize: Qt.size(24, 24)
                 opacity: active ? 1.0 : 0.5
-                renderType: Text.NativeRendering
-                antialiasing: false
-
+                smooth: false 
                 Behavior on opacity {
                     NumberAnimation { duration: 200 }
                 }

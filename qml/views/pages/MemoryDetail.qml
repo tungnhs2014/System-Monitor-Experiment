@@ -15,7 +15,7 @@ Rectangle {
 
     width: 320
     height: 240
-    color: "#0F1419"  // Dark background matching Dashboard
+    color: "#0F1419"
 
     // ==================== SIGNALS FOR NAVIGATION ====================
     signal backRequested()
@@ -61,7 +61,7 @@ Rectangle {
             left: parent.left
             right: parent.right
             bottom: bottomNav.top
-            bottomMargin: 12
+            bottomMargin: 55
         }
         
         // ==================== LARGE CIRCULAR GAUGE ====================
@@ -278,6 +278,4 @@ Rectangle {
             root.navigationRequested(index)
         }
     }
-   
-
 }

@@ -25,7 +25,9 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         currentTime: Qt.formatTime(new Date(), "hh:mm")
-        hostname: "raspberrypi"
+        hostname: systemInfo.hostname
+        
+        onSettingsClicked: root.settingsRequested()
     }
 
     // Content Area
@@ -50,14 +52,12 @@ Rectangle {
                     height: 12
                     spacing: 2
 
-                    Text {
-                        text: "🖥"
-                        font.pixelSize: 10
-                        font.family: "DejaVu Sans"
-                        font.hintingPreference: Font.PreferFullHinting
-                        renderType: Text.NativeRendering
-                        antialiasing: false  
-                        anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        source: "qrc:/assets/icons/cpu.png"
+                        width: 10
+                        height: 10
+                        sourceSize: Qt.size(10, 10)
+                        smooth: false
                     }
                     Text {
                         text: "CPU"
@@ -68,7 +68,6 @@ Rectangle {
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
                         antialiasing: false 
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
@@ -86,7 +85,6 @@ Rectangle {
                         strokeWidth: 2
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
-                        anchors.verticalCenter: parent.verticalCenter
 
                         MouseArea {
                             anchors.fill: parent
@@ -102,7 +100,6 @@ Rectangle {
                         width: 35
                         spacing: 2
                         anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             text: "Temp"
@@ -163,14 +160,12 @@ Rectangle {
                     height: 12
                     spacing: 2
 
-                    Text {
-                        text: "🎮"
-                        font.pixelSize: 10
-                        font.family: "DejaVu Sans"
-                        font.hintingPreference: Font.PreferFullHinting
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        source: "qrc:/assets/icons/gpu.png"
+                        width: 10
+                        height: 10
+                        sourceSize: Qt.size(10, 10)
+                        smooth: false
                     }
                     Text {
                         text: "GPU"
@@ -181,7 +176,6 @@ Rectangle {
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
                         antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
@@ -199,7 +193,6 @@ Rectangle {
                         strokeWidth: 2
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
-                        anchors.verticalCenter: parent.verticalCenter
 
                         MouseArea {
                             anchors.fill: parent
@@ -216,7 +209,6 @@ Rectangle {
                         spacing: 0
                         anchors.right: parent.right
                         anchors.rightMargin: 2
-                        anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             text: "Temp"
@@ -277,14 +269,12 @@ Rectangle {
                     height: 12
                     spacing: 2
 
-                    Text {
-                        text: "📅"
-                        font.pixelSize: 10
-                        font.family: "DejaVu Sans"
-                        font.hintingPreference: Font.PreferFullHinting
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        source: "qrc:/assets/icons/calendar.png"
+                        width: 10
+                        height: 10
+                        sourceSize: Qt.size(10, 10)
+                        smooth: false
                     }
                     Text {
                         text: "DATE"
@@ -295,7 +285,6 @@ Rectangle {
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
                         antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
@@ -332,14 +321,12 @@ Rectangle {
                     height: 12
                     spacing: 2
 
-                    Text {
-                        text: "💾"
-                        font.pixelSize: 10
-                        font.family: "DejaVu Sans"
-                        font.hintingPreference: Font.PreferFullHinting
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        source: "qrc:/assets/icons/memory.png"
+                        width: 10
+                        height: 10
+                        sourceSize: Qt.size(10, 10)
+                        smooth: false
                     }
                     Text {
                         text: "RAM"
@@ -350,7 +337,6 @@ Rectangle {
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
                         antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
@@ -369,7 +355,6 @@ Rectangle {
                         strokeWidth: 2
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.horizontalCenterOffset: -14
-                        anchors.verticalCenter: parent.verticalCenter
 
                         MouseArea {
                             anchors.fill: parent
@@ -386,7 +371,6 @@ Rectangle {
                         spacing: 0
                         anchors.right: parent.right
                         anchors.rightMargin: 2
-                        anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             text: "USED"
@@ -447,14 +431,12 @@ Rectangle {
                     height: 12
                     spacing: 2
 
-                    Text {
-                        text: "💽"
-                        font.pixelSize: 10
-                        font.family: "DejaVu Sans"
-                        font.hintingPreference: Font.PreferFullHinting
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        source: "qrc:/assets/icons/hard-drive.png"
+                        width: 10
+                        height: 10
+                        sourceSize: Qt.size(10, 10)
+                        smooth: false
                     }
                     Text {
                         text: "HDD"
@@ -465,7 +447,6 @@ Rectangle {
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
                         antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
@@ -578,14 +559,12 @@ Rectangle {
                     height: 12
                     spacing: 2
 
-                    Text {
-                        text: "🕐"
-                        font.pixelSize: 10
-                        font.family: "DejaVu Sans"
-                        font.hintingPreference: Font.PreferFullHinting
-                        renderType: Text.NativeRendering
-                        antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        source: "qrc:/assets/icons/clock.png"
+                        width: 10
+                        height: 10
+                        sourceSize: Qt.size(10, 10)
+                        smooth: false
                     }
                     Text {
                         text: "TIME"
@@ -596,7 +575,6 @@ Rectangle {
                         color: "#FFFFFF"
                         renderType: Text.NativeRendering
                         antialiasing: false
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
